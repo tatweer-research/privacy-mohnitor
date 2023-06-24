@@ -1,3 +1,3 @@
 ## Privacy Policy Analysis: Leveraging Bidirectional Language Model Pretraining and Instruction Fine-Tuning
 
-This repository contains the research work done in the master’s thesis of Mohammad Al Zoubi with the title “Privacy Policy Analysis: Leveraging Bidirectional Language Model Pretraining and Instruction Fine-Tuning”. The thesis was supervised by Prof. Dr. Matthias Grabmair and advised by Dr. Santosh Tokala at TUM Chair for LegalTech.
+This repository contains the research work done in the master’s thesis of Mohammad Al Zoubi with the title “Privacy Policy Analysis: Leveraging Bidirectional Language Model Pretraining and Instruction Fine-Tuning”. The thesis was supervised by Prof. Dr. Matthias Grabmair and advised by Santosh Tokala at TUM Chair for LegalTech.
