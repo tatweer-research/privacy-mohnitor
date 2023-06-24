@@ -56,5 +56,5 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\privacy_qa"
     dataset_dict = load_privacy_qa(directory)
-    # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
+    dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
