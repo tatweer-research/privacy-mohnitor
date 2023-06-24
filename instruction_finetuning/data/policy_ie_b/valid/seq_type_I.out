@@ -1,0 +1,100 @@
+O O O O O O O O O O
+O O O O O O
+O O O O O O O O O O O O
+O O O
+O O O O
+O O O O O O
+O O O
+O O O O O O
+O O O
+O O
+O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-action O B-data-provider.user B-data-shared.data-general I-data-shared.data-general O O O O O O O O O O O O O O O O O O O O O O
+B-data-receiver.third-party-entity I-data-receiver.third-party-entity O O B-data-sharer.first-party-entity B-action B-data-provider.user B-data-shared.data-general I-data-shared.data-general O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O O O O O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O O O O O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O B-data-receiver.third-party-entity O B-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O O O O O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O O O O O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O
+O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O
+O O
+O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O
+B-data-collector.first-party-entity O B-action B-data-provider.user B-data-collected.data-general I-data-collected.data-general O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O
+O B-data-provider.user O O O O O O O O O O O O O O O O O O B-data-sharer.first-party-entity I-data-sharer.first-party-entity O O O O O O O O O O O O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O B-action O B-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles O
+O O
+O O O O
+O O O O O
+B-data-protector.first-party-entity O O O O O O O O O O O B-action B-data-provider.user B-data-protected.data-general O B-protect-against.security-threat I-protect-against.security-threat O
+O O O O O O O O O O B-data-provider.user O O O B-protect-against.security-threat I-protect-against.security-threat I-protect-against.security-threat I-protect-against.security-threat I-protect-against.security-threat I-protect-against.security-threat O B-data-protector.first-party-entity O O O O O B-data-protected.data-general O O B-action O O O O
+O O
+O
+O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O
+O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O
+O O O O O O O O
+O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O
+B-data-collector.first-party-entity B-action O B-data-collected.data-general O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O
+O B-data-provider.third-party-entity I-data-provider.third-party-entity O O O O B-data-collected.data-cookies-web-beacons-and-other-technologies O B-data-collected.data-cookies-web-beacons-and-other-technologies I-data-collected.data-cookies-web-beacons-and-other-technologies O O O O B-action B-data-collected.data-general O O B-data-collected.data-general I-data-collected.data-general O B-data-provider.user O
+O O
+O O O O
+O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O
+B-data-sharer.first-party-entity O B-action B-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable O O O O O O O O O O O B-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable O B-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable O B-data-receiver.third-party-entity I-data-receiver.third-party-entity O O O O O O O O O O
+O O O B-data-sharer.first-party-entity B-action B-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable O O O B-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device O O B-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable O B-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable I-data-shared.data-aggregated-nonidentifiable O B-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity I-data-receiver.third-party-entity O
+O O B-data-sharer.first-party-entity B-action O B-data-receiver.third-party-entity O B-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device O B-data-shared.data-location O O B-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles O O B-data-shared.data-computer-device I-data-shared.data-computer-device O B-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device O B-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles O O B-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles O O O B-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles O O B-data-shared.data-user-online-activities-profiles I-data-shared.data-user-online-activities-profiles O B-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device O
+O O O O O O O O O O O O O O O O O O O O O
+O O O B-data-sharer.first-party-entity O O O B-action O B-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device I-data-shared.data-computer-device O B-data-receiver.third-party-entity O
+O O O O B-data-provider.third-party-entity I-data-provider.third-party-entity O O B-action O B-data-collected.data-general O O O O O O O O O O O O O O B-data-collected.data-other I-data-collected.data-other O O O O O O O O O O O O O O
+O B-data-provider.third-party-entity I-data-provider.third-party-entity O O O B-data-collected.data-cookies-web-beacons-and-other-technologies O B-data-provider.user O O O O O B-data-collected.data-cookies-web-beacons-and-other-technologies I-data-collected.data-cookies-web-beacons-and-other-technologies O O B-action B-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles O O O O O O O O O O O O O O O
+O O O B-data-collector.first-party-entity O B-action O O O B-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device O O O
+O O O O O
+O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O
+O O O O O O O O O
+O O O O O O O O O O O
+O B-data-provider.user O O B-data-collector.first-party-entity O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O B-action B-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device O
+O O
+O O O O O O O O O B-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device O B-data-collected.data-computer-device I-data-collected.data-computer-device O B-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles O B-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles O O B-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles O B-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles O B-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles I-data-collected.data-user-online-activities-profiles O B-data-collected.data-computer-device I-data-collected.data-computer-device O B-data-collected.data-computer-device I-data-collected.data-computer-device O B-data-collected.data-computer-device I-data-collected.data-computer-device I-data-collected.data-computer-device O O B-data-collected.data-other I-data-collected.data-other O
+B-data-collector.first-party-entity B-action O B-data-collected.data-general O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O B-data-provider.user O O O
+O O O O O O B-data-collected.data-general O B-action O O O B-data-provider.user O B-data-collector.first-party-entity O O O O O O O O O O O O O O O O O O O O O O O O O
+B-data-collector.first-party-entity O B-action O B-data-collected.data-general O O O B-data-provider.user O O O O O O O O O O O O
+B-data-collector.first-party-entity O O O B-data-collected.data-other I-data-collected.data-other O O O O B-action O O O O B-data-collected.data-other I-data-collected.data-other I-data-collected.data-other O O O O B-action O O O O O B-data-collected.data-aggregated-nonidentifiable O O O O O O O O O O O O
+O O O O O O B-data-collector.first-party-entity I-data-collector.first-party-entity O O B-data-collected.data-cookies-web-beacons-and-other-technologies O O B-data-collected.data-cookies-web-beacons-and-other-technologies I-data-collected.data-cookies-web-beacons-and-other-technologies I-data-collected.data-cookies-web-beacons-and-other-technologies O B-action B-data-collected.data-general O
+O O O O
+O O O O O O O O O O O O O O O O O
+O O O
+O O
+O O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O
+O O O O O O O O O O O O O O O O O O O O O O O
+B-data-holder.first-party-entity B-action B-data-provider.user B-data-retained.data-general I-data-retained.data-general O B-retention-period.retention-period I-retention-period.retention-period I-retention-period.retention-period I-retention-period.retention-period O O O O O O O O O O O
+O B-retention-period.retention-period I-retention-period.retention-period I-retention-period.retention-period O O B-data-holder.first-party-entity B-action B-data-retained.data-general I-data-retained.data-general O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O O
+O O
+O O O O O O
