@@ -1,5 +1,6 @@
-# privacy-mohnitor
+# Dataset
 
+The pretraining is done with the [PrivaSeer](https://privaseer.ist.psu.edu/) dataset proposed by [Srinath et al.](https://arxiv.org/abs/2004.11131).
 
 ### Training ###
 `python3 run_t5_mlm_flax.py --output_dir="./privaseer" --model_name_or_path="t5-small" --model_type="t5-small" --config_name="t5-small" --tokenizer_name="t5-small" --dataset_name="alzoubi36/privaseer" --dataset_config_name="alzoubi36/privaseer" --max_seq_length="512" --per_device_train_batch_size="32" --per_device_eval_batch_size="32" --adafactor --learning_rate="0.001" --weight_decay="0.001" --warmup_steps="2000" --overwrite_output_dir --logging_steps="500" --save_steps="10000" --eval_steps="2500" --num_train_epochs="1" 2>&1 | tee /home/Mohammad.Al-Zoubi/test-flax/privaseer/log.txt`
