@@ -5,6 +5,7 @@ import os
 from typing import cast, Dict
 
 import datasets
+from datasets import load_dataset
 
 LABELS = [
     "Other",
@@ -58,6 +59,29 @@ def load_policy_ie_a(directory: str) -> datasets.DatasetDict:
         combined[split] = dataset
 
     return combined
+
+
+def policy_ie_a_to_text2text(path='alzoubi36/policy_ie_a'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    # collect information about label
+    label_info = datasets.ClassLabel(names=LABELS)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(lambda example: {'text': f"policy_ie_a sentence: {example['text']}",
+                                               'label': example['label']})
+
+        dataset = dataset.map(
+            lambda examples: {
+                "label": [label_info.int2str(label) for label in examples["label"]]
+            },
+            batched=True,
+        )
+        dataset_dict[split] = dataset
+
+    return dataset_dict
 
 
 if __name__ == "__main__":
