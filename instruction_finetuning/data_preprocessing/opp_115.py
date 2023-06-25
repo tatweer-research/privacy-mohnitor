@@ -5,6 +5,7 @@ import os
 
 import datasets
 import pandas as pd
+from datasets import load_dataset
 
 LABELS = [
     "Data Retention",
@@ -66,6 +67,30 @@ def load_opp_115(directory: str) -> datasets.DatasetDict:
         combined[split] = dataset
 
     return combined
+
+
+def opp_115_to_text2text(path='alzoubi36/opp_115'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    label_info = datasets.Sequence(datasets.ClassLabel(names=LABELS))
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(lambda example: {'text': f"opp115 sentence: {example['text']}",
+                                               'label': example['label']})
+
+        dataset = dataset.map(
+            lambda examples: {
+                "label": [
+                    '; '.join(label_info.feature.int2str(labels)) for labels in examples["label"]
+                ]
+            },
+            batched=True,
+        )
+        dataset_dict[split] = dataset
+
+    return dataset_dict
 
 
 if __name__ == "__main__":

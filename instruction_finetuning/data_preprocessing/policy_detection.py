@@ -48,9 +48,9 @@ def load_policy_detection(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def policy_detection_to_text2text():
+def policy_detection_to_text2text(path='alzoubi36/policy_detection'):
     # Load the dataset
-    dataset_dict = load_dataset('alzoubi36/policy_detection')
+    dataset_dict = load_dataset(path)
 
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
