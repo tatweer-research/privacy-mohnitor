@@ -5,6 +5,7 @@ import os
 
 import datasets
 import pandas as pd
+from datasets import load_dataset
 
 LABELS = ["Irrelevant", "Relevant"]
 
@@ -50,6 +51,30 @@ def load_privacy_qa(directory: str) -> datasets.DatasetDict:
         combined[split].features["label"] = label_info
 
     return combined
+
+
+def privacy_qa_to_text2text(path='alzoubi36/privacy_qa'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    # collect information about label
+    label_info = datasets.ClassLabel(names=LABELS)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(
+            lambda example: {'text': f"privacy_qa question: {example['question']} text: {example['text']}",
+                             'label': example['label']}, remove_columns=['question'])
+
+        dataset = dataset.map(
+            lambda examples: {
+                "label": [label_info.int2str(label) for label in examples["label"]]
+            },
+            batched=True,
+        )
+        dataset_dict[split] = dataset
+
+    return dataset_dict
 
 
 if __name__ == "__main__":
