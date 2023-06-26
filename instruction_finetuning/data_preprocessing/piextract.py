@@ -4,7 +4,7 @@
 import os
 from glob import glob
 from typing import Dict, List, Tuple
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 import datasets
 
 
@@ -131,6 +131,26 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
     combined['validation'] = Dataset.from_dict(combined['validation'])
 
     return combined
+
+
+def piextract_to_text2text(path='alzoubi36/piextract'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        temp_dataset = Dataset.from_dict({'data': dataset[SUBTASKS[0]] + dataset[SUBTASKS[1]] +
+                                                  dataset[SUBTASKS[2]] + dataset[SUBTASKS[3]]})
+        # Merge label columns into a single column
+        dataset = temp_dataset
+        dataset = dataset.map(lambda example: {'text': f"piextract {example['data']['subtask']} "
+                                                       f"tokens: {str(example['data']['tokens'])}",
+                                               'label': str(example['data']['tags'])},
+                              remove_columns=['data'])
+
+        dataset_dict[split] = dataset
+
+    return dataset_dict
 
 
 if __name__ == "__main__":
