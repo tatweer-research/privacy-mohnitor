@@ -2,7 +2,7 @@ import os
 from typing import cast, Dict
 
 import datasets
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 
 SUBTASKS = ["type-I", "type-II"]
 LABELS = [
@@ -115,6 +115,26 @@ def load_policy_ie_b(directory: str) -> datasets.DatasetDict:
     combined['validation'] = Dataset.from_dict(combined['validation'])
 
     return combined
+
+
+def policy_ie_b_to_text2text(path='alzoubi36/policy_ie_b'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        temp_dataset = Dataset.from_dict({'data': dataset[SUBTASKS[0]] + dataset[SUBTASKS[1]]})
+
+        # Merge label columns into a single column
+        dataset = temp_dataset
+        dataset = dataset.map(lambda example: {
+            'text': f"policy_ie_b {example['data']['subtask']} tokens: {str(example['data']['tokens'])}",
+            'label': str(example['data']['tags'])},
+                              remove_columns=['data'])
+
+        dataset_dict[split] = dataset
+
+    return dataset_dict
 
 
 if __name__ == "__main__":
