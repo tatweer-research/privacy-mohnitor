@@ -62,10 +62,9 @@ def load_policy_qa(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def transform_dataset(path='alzoubi36/policy_qa'):
+def policy_qa_to_text2text(path='alzoubi36/policy_qa'):
     # Load the dataset
     dataset_dict = load_dataset(path)
-    # collect information about label
 
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
