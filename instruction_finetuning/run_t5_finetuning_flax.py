@@ -868,18 +868,18 @@ def main():
     # Create parallel version of the train step
     p_train_step = jax.pmap(train_step, "batch", donate_argnums=(0,))
 
-    def f1(y_true, y_pred):
-        TP = jnp.sum(jnp.multiply(jnp.asarray(i == True for i in y_pred), y_true))
-        TN = jnp.sum(jnp.multiply([i == False for i in y_pred], [not (j) for j in y_true]))
-        FP = jnp.sum(jnp.multiply([i == True for i in y_pred], [not (j) for j in y_true]))
-        FN = jnp.sum(jnp.multiply([i == False for i in y_pred], y_true))
-        precision = TP / (TP + FP)
-        recall = TP / (TP + FN)
-        if precision != 0 and recall != 0:
-            f1 = (2 * precision * recall) / (precision + recall)
-        else:
-            f1 = 0
-        return f1
+    def f1(labels, predictions):
+        true_positives = jnp.sum((labels == 1) & (predictions == 1))
+        false_positives = jnp.sum((labels == 0) & (predictions == 1))
+        false_negatives = jnp.sum((labels == 1) & (predictions == 0))
+        true_negatives = jnp.sum((labels == 0) & (predictions == 0))
+
+        precision = true_positives / (true_positives + false_positives)
+        recall = true_positives / (true_positives + false_negatives)
+        f1_score = 2 * precision * recall / (precision + recall)
+        accuracy = (true_positives + true_negatives) / (len(labels))
+
+        return f1_score, accuracy, precision, recall
 
     # Define eval fn
     def eval_step(params, batch):
@@ -887,19 +887,25 @@ def main():
 
         logits = model(**batch, params=params, train=False)[0]
 
+        def _make_binary(array):
+            array = array[:, :1]
+            array = jnp.where(array == 1291, 1, 0)
+            return array
+
         # compute loss
         loss = optax.softmax_cross_entropy(logits, onehot(labels, logits.shape[-1]))
 
+        # labels = _make_binary(labels)
+        # logits = _make_binary(jnp.argmax(logits, axis=-1))
+
         # compute accuracy
         accuracy = jnp.equal(jnp.argmax(logits, axis=-1), labels)
-        f1_result = f1(labels, jnp.argmax(logits, axis=-1))
+        f1_score, acc, precision, recall = f1(labels, jnp.argmax(logits, axis=-1))
 
         # summarize metrics
-        metrics = {"loss": loss.mean(), "accuracy": accuracy.mean(), "f1": f1_result}
+        metrics = {"loss": loss.mean(), "accuracy": accuracy.mean(), "micro_f1": f1_score, "acc": acc,
+                   "precision": precision, "recall": recall}
         metrics = jax.lax.pmean(metrics, axis_name="batch")
-        print('##### accuracy #####')
-        print(metrics["accuracy"])
-        print('####################')
         return metrics
 
     p_eval_step = jax.pmap(eval_step, "batch", donate_argnums=(0,))
@@ -1002,7 +1008,8 @@ def main():
                 eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
                 # Update progress bar
-                epochs.write(f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']})")
+                epochs.write(
+                    f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}, F1 micro: {eval_metrics['micro_f1']}, precision: {eval_metrics['precision']}, recall: {eval_metrics['recall']})")
 
                 # Save metrics
                 if has_tensorboard and jax.process_index() == 0:
@@ -1031,7 +1038,8 @@ def main():
                 model_inputs = data_collator(samples)
             elif training_args.training_mode == "finetune":
                 model_inputs = {
-                    'input_ids': np.asarray([tokenized_datasets["validation"][int(idx)]['input_ids'] for idx in batch_idx]),
+                    'input_ids': np.asarray(
+                        [tokenized_datasets["validation"][int(idx)]['input_ids'] for idx in batch_idx]),
                     'labels': np.asarray([tokenized_datasets["validation"][int(idx)]['labels'] for idx in batch_idx])}
                 model_inputs["decoder_input_ids"] = shift_tokens_right(
                     model_inputs["labels"], data_collator.pad_token_id, data_collator.decoder_start_token_id
