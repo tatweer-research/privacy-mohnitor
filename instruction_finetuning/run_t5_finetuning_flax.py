@@ -868,20 +868,19 @@ def main():
     # Create parallel version of the train step
     p_train_step = jax.pmap(train_step, "batch", donate_argnums=(0,))
 
-    def f1(labels, predictions):
-        true_positives = jnp.sum((labels == 1) & (predictions == 1))
-        false_positives = jnp.sum((labels == 0) & (predictions == 1))
-        false_negatives = jnp.sum((labels == 1) & (predictions == 0))
-        true_negatives = jnp.sum((labels == 0) & (predictions == 0))
+    def f1(y_true, y_pred):
+        tp = jnp.sum((y_true == 1) & (y_pred == 1))
+        fp = jnp.sum((y_true == 0) & (y_pred == 1))
+        fn = jnp.sum((y_true == 1) & (y_pred == 0))
+        tn = jnp.sum((y_true == 0) & (y_pred == 0))
 
-        precision = true_positives / (true_positives + false_positives)
-        recall = true_positives / (true_positives + false_negatives)
-        f1_score = 2 * precision * recall / (precision + recall)
-        accuracy = (true_positives + true_negatives) / (len(labels))
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
 
-        return f1_score, accuracy, precision, recall
+        f1 = 2 * (precision * recall) / (precision + recall)
 
-    # Define eval fn
+        return f1, tp, tn, fp, fn, precision, recall
+
     def eval_step(params, batch):
         labels = batch.pop("labels")
 
@@ -889,23 +888,22 @@ def main():
 
         def _make_binary(array):
             array = array[:, :1]
-            array = jnp.where(array == 1291, 1, 0)
+            array = jnp.where(array == 1291, 1, 0).reshape(-1)
             return array
+
 
         # compute loss
         loss = optax.softmax_cross_entropy(logits, onehot(labels, logits.shape[-1]))
 
-        # labels = _make_binary(labels)
-        # logits = _make_binary(jnp.argmax(logits, axis=-1))
-
         # compute accuracy
         accuracy = jnp.equal(jnp.argmax(logits, axis=-1), labels)
-        f1_score, acc, precision, recall = f1(labels, jnp.argmax(logits, axis=-1))
-
+        logits = _make_binary(jnp.argmax(logits, axis=-1))
+        labels = _make_binary(labels)
+        fs, *other = f1(labels, logits)
         # summarize metrics
-        metrics = {"loss": loss.mean(), "accuracy": accuracy.mean(), "micro_f1": f1_score, "acc": acc,
-                   "precision": precision, "recall": recall}
+        metrics = {"loss": loss.mean(), "accuracy": accuracy.mean()}
         metrics = jax.lax.pmean(metrics, axis_name="batch")
+        metrics["f1"] = (fs, other)
         return metrics
 
     p_eval_step = jax.pmap(eval_step, "batch", donate_argnums=(0,))
@@ -1008,8 +1006,7 @@ def main():
                 eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
                 # Update progress bar
-                epochs.write(
-                    f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}, F1 micro: {eval_metrics['micro_f1']}, precision: {eval_metrics['precision']}, recall: {eval_metrics['recall']})")
+                epochs.write(f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}, F1: {eval_metrics['f1']})")
 
                 # Save metrics
                 if has_tensorboard and jax.process_index() == 0:
