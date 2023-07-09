@@ -61,6 +61,8 @@ from transformers import (
 from transformers.models.t5.modeling_flax_t5 import shift_tokens_right
 from transformers.utils import get_full_repo_name, send_example_telemetry
 
+from instruction_finetuning.data_preprocessing import text2text_functions
+
 MODEL_CONFIG_CLASSES = list(FLAX_MODEL_FOR_MASKED_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
@@ -315,12 +317,13 @@ class T5Finetuner:
     def __init__(self):
         self.data_args, self.model_args, self.training_args = load_arguments()
         self.logger = self.setup_logging()
+        self.text2text_functions = text2text_functions
 
         # Set seed before initializing model.
         set_seed(self.training_args.seed)
 
         self.repo = self.handle_hf_repo_creation()
-        self.datasets = self.load_finetuning_dataset()
+        self.datasets = self.load_privacy_glue_dataset()
         self.tokenizer = self.load_tokenizer()
         self.config = self.load_model_config()
 
@@ -665,7 +668,7 @@ class T5Finetuner:
             )
         return tokenizer
 
-    def load_finetuning_dataset(self):
+    def load_finetuning_dataset(self, task='policy_detection'):
         # Get the datasets: you can either provide your own CSV/JSON/TXT training and evaluation files (see below) or
         # just provide the name of one of the public datasets available on the hub at
         # https://huggingface.co/datasets/ (the dataset will be downloaded automatically from the datasets Hub).
@@ -680,10 +683,6 @@ class T5Finetuner:
                 cache_dir=self.model_args.cache_dir,
                 use_auth_token=True if self.model_args.use_auth_token else None,
             )
-
-            # TODO: to be removed
-            from data_preprocessing.policy_detection import policy_detection_to_text2text
-            datasets = policy_detection_to_text2text()
 
             if "validation" not in datasets.keys():
                 datasets["validation"] = load_dataset(
@@ -732,6 +731,9 @@ class T5Finetuner:
                     use_auth_token=True if self.model_args.use_auth_token else None,
                 )
         return datasets
+
+    def load_privacy_glue_dataset(self, task='policy_detection'):
+        return self.text2text_functions['privacy_glue'][task]()
 
     def handle_hf_repo_creation(self):
         # Handle the repository creation

@@ -117,7 +117,7 @@ def load_policy_ie_b(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def policy_ie_b_to_text2text(path='alzoubi36/policy_ie_b'):
+def to_text2text(path='alzoubi36/policy_ie_b'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 

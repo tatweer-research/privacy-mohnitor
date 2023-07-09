@@ -48,7 +48,7 @@ def load_policy_detection(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def policy_detection_to_text2text(path='alzoubi36/policy_detection'):
+def to_text2text(path='alzoubi36/policy_detection'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 
@@ -71,4 +71,4 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_detection"
     dataset_dict = load_policy_detection(directory)
-    dataset_dict.push_to_hub('alzoubi36/policy_detection')
+    # dataset_dict.push_to_hub('alzoubi36/policy_detection')

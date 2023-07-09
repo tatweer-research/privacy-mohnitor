@@ -69,7 +69,7 @@ def load_opp_115(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def opp_115_to_text2text(path='alzoubi36/opp_115'):
+def to_text2text(path='alzoubi36/opp_115'):
     # Load the dataset
     dataset_dict = load_dataset(path)
     label_info = datasets.Sequence(datasets.ClassLabel(names=LABELS))
@@ -96,6 +96,7 @@ def opp_115_to_text2text(path='alzoubi36/opp_115'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\opp_115"
-    dataset_dict = load_opp_115(directory)
-    dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
+    # dataset_dict = load_opp_115(directory)
+    dataset_dict = to_text2text()
+    # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()

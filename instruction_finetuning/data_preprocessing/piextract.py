@@ -133,7 +133,7 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def piextract_to_text2text(path='alzoubi36/piextract'):
+def to_text2text(path='alzoubi36/piextract'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 
