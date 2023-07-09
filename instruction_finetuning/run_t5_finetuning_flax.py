@@ -84,7 +84,8 @@ class TrainingArguments:
         },
     )
     training_mode: str = field(default="pretrain", metadata={"help": "Training mode: pretrain or finetune."})
-    tasks: List[str] = field(default=("policy_detection", "opp_115"), metadata={"help": "PrivacyGLUE tasks to train on."})
+    tasks: List[str] = field(default=None,
+                             metadata={"help": "PrivacyGLUE tasks to train on."})
 
     do_train: bool = field(default=True, metadata={"help": "Whether to run training."})
     do_eval: bool = field(default=True, metadata={"help": "Whether to run eval on the dev set."})
@@ -424,10 +425,17 @@ class T5Finetuner:
         # Replicate the train state on each device
         state = jax_utils.replicate(state)
 
+        # Count steps with no improvement
+        no_improvement_count = 0
+
         train_time = 0
         epochs = tqdm(range(num_epochs), desc="Epoch ... ", position=0)
         for epoch in epochs:
             # ======================== Training ================================
+
+            if no_improvement_count >= 40:
+                break
+
             train_start = time.time()
             train_metrics = []
 
@@ -436,6 +444,7 @@ class T5Finetuner:
 
             # Generate an epoch by shuffling sampling indices from the train dataset
             num_train_samples = len(self.tokenized_datasets["train"])
+
             # Avoid using jax.numpy here in case of TPU training
             train_samples_idx = np.random.permutation(np.arange(num_train_samples))
             train_batch_idx = generate_batch_splits(train_samples_idx, train_batch_size)
@@ -509,6 +518,9 @@ class T5Finetuner:
                         best_eval_metric = eval_metrics['accuracy']
                         self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'best_model'))
                         self.logger.info(f"Saving best model...")
+                        no_improvement_count = 0
+                    else:
+                        no_improvement_count += 1
 
                     # Update progress bar
                     epochs.write(
@@ -861,7 +873,6 @@ class T5Finetuner:
         self.logger.info(f'{tasks}')
 
         for task in tasks:
-
             # Create a task directory
             self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
             Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
