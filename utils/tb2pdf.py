@@ -1,3 +1,5 @@
+import os.path
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -36,7 +38,7 @@ def read_tensorboard_experiment(logdir: str):
     return data
 
 
-def create_pdf_from_tensorboard(logdir: str):
+def create_pdf_from_tensorboard(logdir: str, report_dir: str):
     """
     Create a PDF report from a TensorBoard experiment.
     Args:
@@ -48,7 +50,7 @@ def create_pdf_from_tensorboard(logdir: str):
     sns.set(style="darkgrid")
 
     # Create a PDF document to save the figures
-    pdf_pages = PdfPages("tensorboard_report.pdf")
+    pdf_pages = PdfPages(os.path.join(report_dir, "training_report.pdf"))
 
     for column in exp_data.keys():
         plt.figure(figsize=(12, 6))
@@ -69,4 +71,4 @@ def create_pdf_from_tensorboard(logdir: str):
 if __name__ == '__main__':
     # Define the experiment ID
     logdir = r"/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/expermiments/"
-    create_pdf_from_tensorboard(logdir)
+    create_pdf_from_tensorboard(logdir, '')

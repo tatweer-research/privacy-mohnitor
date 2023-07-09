@@ -26,6 +26,7 @@ import os
 import sys
 import time
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
 # You can also adapt this script on your own masked language modeling task. Pointers for this are left as comments.
 from enum import Enum
@@ -62,6 +63,7 @@ from transformers.models.t5.modeling_flax_t5 import shift_tokens_right
 from transformers.utils import get_full_repo_name, send_example_telemetry
 
 from instruction_finetuning.data_preprocessing import text2text_functions
+from utils import create_pdf_from_tensorboard, get_current_date
 
 MODEL_CONFIG_CLASSES = list(FLAX_MODEL_FOR_MASKED_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
@@ -82,6 +84,7 @@ class TrainingArguments:
         },
     )
     training_mode: str = field(default="pretrain", metadata={"help": "Training mode: pretrain or finetune."})
+    tasks: List[str] = field(default=("policy_detection", "opp_115"), metadata={"help": "PrivacyGLUE tasks to train on."})
 
     do_train: bool = field(default=True, metadata={"help": "Whether to run training."})
     do_eval: bool = field(default=True, metadata={"help": "Whether to run eval on the dev set."})
@@ -323,21 +326,31 @@ class T5Finetuner:
         set_seed(self.training_args.seed)
 
         self.repo = self.handle_hf_repo_creation()
-        self.datasets = self.load_privacy_glue_dataset()
-        self.tokenizer = self.load_tokenizer()
-        self.config = self.load_model_config()
 
-        # Tokenize our datasets.
-        self.tokenized_datasets = self.tokenize_datasets()
+        # Create output directory
+        self.training_args.output_dir = os.path.join(self.training_args.output_dir, get_current_date())
+        self._cached_output_dir = self.training_args.output_dir
+        Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
 
-        self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
-        self.model = self.load_model()
-        self.linear_decay_lr_schedule_fn = None
+        if not self.training_args.tasks:
+            self.datasets = self.load_privacy_glue_dataset()
+            self.tokenizer = self.load_tokenizer()
+            self.config = self.load_model_config()
 
-    def train(self):
+            # Tokenize our datasets.
+            self.tokenized_datasets = self.tokenize_datasets()
+
+            self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
+            self.model = self.load_model()
+            self.linear_decay_lr_schedule_fn = None
+
+    def finetune(self):
         # Initialize our training
         rng = jax.random.PRNGKey(self.training_args.seed)
         dropout_rngs = jax.random.split(rng, jax.local_device_count())
+
+        best_model = None
+        best_eval_metric = 0.0
 
         # Store some constant
         num_epochs = int(self.training_args.num_train_epochs)
@@ -492,24 +505,25 @@ class T5Finetuner:
                     eval_metrics = get_metrics(eval_metrics)
                     eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
+                    if eval_metrics['accuracy'] > best_eval_metric:
+                        best_eval_metric = eval_metrics['accuracy']
+                        self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'best_model'))
+                        self.logger.info(f"Saving best model...")
+
                     # Update progress bar
                     epochs.write(
-                        f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}, F1: {eval_metrics['f1']})")
+                        f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']})")
 
                     # Save metrics
                     if self.has_tensorboard and jax.process_index() == 0:
                         write_eval_metric(self.summary_writer, eval_metrics, cur_step)
 
                 if cur_step % self.training_args.save_steps == 0 and cur_step > 0:
-                    # save checkpoint after each epoch and push checkpoint to the hub
-                    if jax.process_index() == 0:
-                        params = jax.device_get(jax.tree_util.tree_map(lambda x: x[0], state.params))
-                        self.model.save_pretrained(self.training_args.output_dir, params=params)
-                        self.tokenizer.save_pretrained(self.training_args.output_dir)
-                        if self.training_args.push_to_hub:
-                            self.repo.push_to_hub(commit_message=f"Saving weights and logs of step {cur_step}",
-                                                  blocking=False)
+                    self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'latest_model'))
 
+        self.create_training_report()
+
+        # ======================== Evaluation ================================
         # Eval after training
         if self.training_args.do_eval:
             eval_metrics = self.evaluate(eval_batch_size, p_eval_step, per_device_eval_batch_size, state)
@@ -519,6 +533,16 @@ class T5Finetuner:
                 path = os.path.join(self.training_args.output_dir, "eval_results.json")
                 with open(path, "w") as f:
                     json.dump(eval_metrics, f, indent=4, sort_keys=True)
+
+    def save_model(self, cur_step, state, output_dir):
+        # save checkpoint after each epoch and push checkpoint to the hub
+        if jax.process_index() == 0:
+            params = jax.device_get(jax.tree_util.tree_map(lambda x: x[0], state.params))
+            self.model.save_pretrained(output_dir, params=params)
+            self.tokenizer.save_pretrained(output_dir)
+            if self.training_args.push_to_hub:
+                self.repo.push_to_hub(commit_message=f"Saving weights and logs of step {cur_step}",
+                                      blocking=False)
 
     def evaluate(self, eval_batch_size, p_eval_step, per_device_eval_batch_size, state):
         num_eval_samples = len(self.tokenized_datasets["validation"])
@@ -733,6 +757,8 @@ class T5Finetuner:
         return datasets
 
     def load_privacy_glue_dataset(self, task='policy_detection'):
+        if task not in self.text2text_functions['privacy_glue'].keys():
+            raise ValueError(f"Task {task} not found in PrivacyGLUE benchmark.")
         return self.text2text_functions['privacy_glue'][task]()
 
     def handle_hf_repo_creation(self):
@@ -814,16 +840,47 @@ class T5Finetuner:
 
         # compute accuracy
         accuracy = jnp.equal(jnp.argmax(logits, axis=-1), labels)
-        logits = _make_binary(jnp.argmax(logits, axis=-1))
-        labels = _make_binary(labels)
-        fs, *other = self.f1(labels, logits)
+
+        # TODO: Write F1 score for each task --> Discuss with @SantoshTokala
+        # logits = _make_binary(jnp.argmax(logits, axis=-1))
+        # labels = _make_binary(labels)
+        # fs, *other = self.f1(labels, logits)
         # summarize metrics
         metrics = {"loss": loss.mean(), "accuracy": accuracy.mean()}
         metrics = jax.lax.pmean(metrics, axis_name="batch")
-        metrics["f1"] = (fs, other)
+        # metrics["f1"] = (fs, other)
         return metrics
+
+    def create_training_report(self):
+        self.logger.info('Generating training report...')
+        create_pdf_from_tensorboard(self.training_args.output_dir, self.training_args.output_dir)
+
+    def finetune_on_privacy_glue(self):
+        tasks = self.training_args.tasks
+        self.logger.info(f'======================= Finetuning T5 on the following tasks: =======================')
+        self.logger.info(f'{tasks}')
+
+        for task in tasks:
+
+            # Create a task directory
+            self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
+            Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
+
+            self.datasets = self.load_privacy_glue_dataset(task=task)
+            self.tokenizer = self.load_tokenizer()
+            self.config = self.load_model_config()
+
+            # Tokenize our datasets.
+            self.tokenized_datasets = self.tokenize_datasets()
+
+            self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
+            self.model = self.load_model()
+            self.linear_decay_lr_schedule_fn = None
+
+            self.logger.info(f'======================= Finetuning on task {task}... =======================')
+            self.finetune()
 
 
 if __name__ == "__main__":
     finetuner = T5Finetuner()
-    finetuner.train()
+    finetuner.finetune_on_privacy_glue()
