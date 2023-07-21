@@ -7,6 +7,7 @@ from glob import glob
 from typing import Any, Dict, List
 
 import datasets
+from datasets import load_dataset
 
 
 def load_policy_qa(directory: str) -> datasets.DatasetDict:
@@ -59,6 +60,25 @@ def load_policy_qa(directory: str) -> datasets.DatasetDict:
         combined[split] = datasets.Dataset.from_dict(temp_dict)
 
     return combined
+
+
+def to_text2text(path='alzoubi36/policy_qa'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+
+        dataset = dataset.map(lambda example: {'text': f"policy_qa question: {example['question']} "
+                                                       f"context: {example['context']}",
+                                               'label': f"answer_start: {str(example['answers']['answer_start'][0])} "
+                                                        f"answer_end: {str(example['answers']['answer_start'][0] + len(example['answers']['text'][0]))}"},
+                              remove_columns=['question', 'context', 'answers', 'id', 'title'])
+
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
 
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \

@@ -1,6 +1,7 @@
 import os
 import datasets
 import pandas as pd
+from datasets import load_dataset
 
 LABELS = ["Not Policy", "Policy"]
 
@@ -47,8 +48,27 @@ def load_policy_detection(directory: str) -> datasets.DatasetDict:
     return combined
 
 
+def to_text2text(path='alzoubi36/policy_detection'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(lambda example: {'text': f"policy detection: {example['text']}",
+                                               'label': example['label']})
+
+        # Transform labels
+        label_mapping = {1: 'policy', 0: 'not policy'}
+        dataset = dataset.map(lambda example: {'text': example['text'],
+                                               'label': label_mapping[example['label']]})
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_detection"
     dataset_dict = load_policy_detection(directory)
-    dataset_dict.push_to_hub('alzoubi36/policy_detection')
+    # dataset_dict.push_to_hub('alzoubi36/policy_detection')

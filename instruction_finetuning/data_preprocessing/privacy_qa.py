@@ -5,6 +5,7 @@ import os
 
 import datasets
 import pandas as pd
+from datasets import load_dataset
 
 LABELS = ["Irrelevant", "Relevant"]
 
@@ -52,9 +53,33 @@ def load_privacy_qa(directory: str) -> datasets.DatasetDict:
     return combined
 
 
+def to_text2text(path='alzoubi36/privacy_qa'):
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    # collect information about label
+    label_info = datasets.ClassLabel(names=LABELS)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(
+            lambda example: {'text': f"privacy_qa question: {example['question']} text: {example['text']}",
+                             'label': example['label']}, remove_columns=['question'])
+
+        dataset = dataset.map(
+            lambda examples: {
+                "label": [label_info.int2str(label) for label in examples["label"]]
+            },
+            batched=True,
+        )
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\privacy_qa"
     dataset_dict = load_privacy_qa(directory)
-    dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
+    # dataset_dict.push_to_hub('alzoubi36/privacy_qa')
     print()
