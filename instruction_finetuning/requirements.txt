@@ -8,3 +8,4 @@ tokenizers
 tensorboard
 tensorflow
 sentencepiece
+seaborn
