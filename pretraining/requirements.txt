@@ -5,3 +5,5 @@ flax>=0.3.5
 optax>=0.0.9
 transformers
 tokenizers
+tensorboard
+tensorflow
