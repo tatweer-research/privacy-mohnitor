@@ -83,7 +83,7 @@ def to_text2text(path='alzoubi36/opp_115'):
         dataset = dataset.map(
             lambda examples: {
                 "label": [
-                    '; '.join(label_info.feature.int2str(labels)) for labels in examples["label"]
+                    '\n'.join(label_info.feature.int2str(labels)) for labels in examples["label"]
                 ]
             },
             batched=True,

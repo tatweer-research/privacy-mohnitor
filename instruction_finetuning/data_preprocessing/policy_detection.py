@@ -70,5 +70,7 @@ def to_text2text(path='alzoubi36/policy_detection'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_detection"
-    dataset_dict = load_policy_detection(directory)
+    # dataset_dict = load_policy_detection(directory)
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/policy_detection')
+    print()

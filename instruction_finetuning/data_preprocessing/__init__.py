@@ -17,3 +17,5 @@ text2text_functions = {
         "privacy_qa": privacy_qa,
     }
 }
+
+TASKS = list(text2text_functions["privacy_glue"].keys())

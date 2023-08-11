@@ -137,14 +137,62 @@ def to_text2text(path='alzoubi36/piextract'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 
+    def generate_extra_ids(example: list):
+        return [f'<extra_id_{i}>' for i in range(len(example))]
+
+    def combine_subtasks_labels(example: dict):
+        subtasks = example.keys()
+        tags = (example[subtask]['tags'] for subtask in subtasks)
+        combined_labels = map(list, zip(*tags))
+        combined_labels = map(set, combined_labels)
+        return list(combined_labels)
+
+    # TODO: remove
+    def check_condition(result):
+        return 'B-NOT_COLLECT' in result and 'B-COLLECT' in result \
+                    or 'I-NOT_COLLECT' in result and 'I-COLLECT' in result \
+                    or 'I-NOT_SHARE' in result and 'I-SHARE' in result \
+                    or 'B-NOT_SHARE' in result and 'B-SHARE' in result
+
+    def check_overlapping_labels():
+        dataset = dataset_dict['train']
+        c = 0
+        for i in dataset:
+            c += len(i['COLLECT']['tokens'])
+        print('dataset_tokens:', c)
+        c_datapoints = 0
+        c_overlapped_tokens = 0
+        c_err = 0
+        c_err_tokens = 0
+
+        for example in dataset:
+            results = combine_subtasks_labels(example)
+            check_list = [len(x) > 2 for x in results]
+            error_list = [check_condition(result) for result in results]
+            if any(check_list):
+                [print(result) for result in results if len(result) > 2]
+                print(example)
+                c_datapoints += 1
+                c_overlapped_tokens += sum(check_list)
+                c_err_tokens += sum(error_list)
+                c_err += any(error_list)
+                print()
+        # print('datapoints_proportion:', c_datapoints/len(dataset))
+        # print('c_datapoints:', c_datapoints)
+        # print('c_err:', c_err)
+        # print('c_err_tokens:', c_err_tokens)
+        # print('c_overlapped_tokens:', c_overlapped_tokens)
+        # print(len(dataset))
+    check_overlapping_labels()
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
         temp_dataset = Dataset.from_dict({'data': dataset[SUBTASKS[0]] + dataset[SUBTASKS[1]] +
                                                   dataset[SUBTASKS[2]] + dataset[SUBTASKS[3]]})
+
         # Merge label columns into a single column
         dataset = temp_dataset
-        dataset = dataset.map(lambda example: {'text': f"piextract {example['data']['subtask']} "
-                                                       f"tokens: {str(example['data']['tokens'])}",
+        dataset = dataset.map(lambda example: {'text': f"piextract "
+                                                       f"sentence: {str(example['data']['tokens'])}",
                                                'label': str(example['data']['tags'])},
                               remove_columns=['data'])
 
@@ -156,6 +204,7 @@ def to_text2text(path='alzoubi36/piextract'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
-    dataset_dict = load_piextract(directory)
+    # dataset_dict = load_piextract(directory)
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
