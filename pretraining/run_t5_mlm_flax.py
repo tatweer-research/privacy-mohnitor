@@ -60,7 +60,8 @@ from transformers import (
 )
 from transformers.models.t5.modeling_flax_t5 import shift_tokens_right
 from transformers.utils import get_full_repo_name, send_example_telemetry
-
+from jax_smi import initialise_tracking
+initialise_tracking()
 
 MODEL_CONFIG_CLASSES = list(FLAX_MODEL_FOR_MASKED_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
@@ -732,14 +733,19 @@ def main():
     rng = jax.random.PRNGKey(training_args.seed)
     dropout_rngs = jax.random.split(rng, jax.local_device_count())
 
+    from_pt = True if model_args.model_name_or_path in ['google/t5-v1_1-xl', 'google/t5-v1_1-xxl'] else False
     if model_args.model_name_or_path:
-        model = FlaxT5ForConditionalGeneration.from_pretrained(
-            model_args.model_name_or_path,
-            config=model_args.model_name_or_path,
-            seed=training_args.seed,
-            dtype=getattr(jnp, model_args.dtype),
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
+        with jax.default_device(jax.devices("cpu")[0]):
+            model = FlaxT5ForConditionalGeneration.from_pretrained(
+                model_args.model_name_or_path,
+                config=model_args.model_name_or_path,
+                seed=training_args.seed,
+                # dtype=getattr(jnp, model_args.dtype),
+                use_auth_token=True if model_args.use_auth_token else None,
+                from_pt=from_pt,
+                dtype=jnp.bfloat16
+            )
+            model.params = model.to_bf16(model.params)
     else:
         config.vocab_size = len(tokenizer)
         model = FlaxT5ForConditionalGeneration(
