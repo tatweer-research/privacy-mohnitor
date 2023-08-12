@@ -133,12 +133,12 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def to_text2text(path='alzoubi36/piextract', combine_subtasks: bool = True):
+def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 
     def generate_extra_ids(example: list):
-        return [f'<extra_id_{i}>' for i in range(len(example))]
+        return [f'<extra_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
 
     def combine_subtasks_labels(example: dict):
         subtasks = example.keys()
@@ -156,60 +156,39 @@ def to_text2text(path='alzoubi36/piextract', combine_subtasks: bool = True):
 
         combined_labels = map(filter_labels, combined_labels)
         combined_labels = map('.'.join, combined_labels)
-        return list(combined_labels)
+        example['COLLECT']['tags'] = list(combined_labels)
+        return example
 
-    # TODO: remove
-    def check_condition(result):
-        return 'B-NOT_COLLECT' in result and 'B-COLLECT' in result \
-            or 'I-NOT_COLLECT' in result and 'I-COLLECT' in result \
-            or 'I-NOT_SHARE' in result and 'I-SHARE' in result \
-            or 'B-NOT_SHARE' in result and 'B-SHARE' in result
+    def add_extra_ids(example, mode='tags', subtask='COLLECT'):
+        extra_ids = generate_extra_ids(example)
+        transformed = []
+        for id, token in zip(extra_ids, example[subtask][mode]):
+            transformed += [' ' + id + ' ' + token]
+        return transformed
 
-    def check_overlapping_labels():
-        dataset = dataset_dict['train']
-        c = 0
-        # print('dataset_tokens:', c)
-        c_datapoints = 0
-        c_overlapped_tokens = 0
-        c_err = 0
-        c_err_tokens = 0
-
-        for example in dataset:
-            results = combine_subtasks_labels(example)
-            print(results)
-        # print('datapoints_proportion:', c_datapoints/len(dataset))
-        # print('c_datapoints:', c_datapoints)
-        # print('c_err:', c_err)
-        # print('c_err_tokens:', c_err_tokens)
-        # print('c_overlapped_tokens:', c_overlapped_tokens)
-        print(len(dataset))
-
-    check_overlapping_labels()
-
-    if combine_subtasks:
-        dataset_dict_COLLECT = DatasetDict()
-        dataset_dict_NOT_COLLECT = DatasetDict()
-        dataset_dict_NOT_SHARE = DatasetDict()
-        dataset_dict_SHARE = DatasetDict()
-
-        for split in dataset_dict.keys():
-            dataset = dataset_dict[split]
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        if subtask == 'combined':
             dataset = dataset.map(lambda example: {'text': f"piextract "
-                                                           f"sentence: {str(example['data']['tokens'])}",
-                                                   'label': str(example['data']['tags'])},
-                                  remove_columns=['data'])
-
+                                                           f"sentence:{''.join(add_extra_ids(combine_subtasks_labels(example), mode='tokens'))}",
+                                                   'label': ''.join(add_extra_ids(example, mode='tags'))},
+                                  remove_columns= ['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE'])
+            dataset_dict[split] = dataset
+        else:
+            dataset = dataset.map(lambda example: {'text': f"piextract "
+                                                           f"sentence:{''.join(add_extra_ids(example, mode='tokens', subtask=subtask))}",
+                                                   'label': ''.join(add_extra_ids(example, mode='tags', subtask=subtask))},
+                                  remove_columns=['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE'])
             dataset_dict[split] = dataset
 
-        return dataset_dict
-    else:
-        ...
+    return dataset_dict
+
 
 
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
-    dataset_dict = to_text2text()
+    dataset_dict = to_text2text(subtask='combined')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
