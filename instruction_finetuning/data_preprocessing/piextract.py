@@ -197,6 +197,6 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
-    dataset_dict = to_text2text(subtask='SHARE')
+    dataset_dict = to_text2text(subtask='combined')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
