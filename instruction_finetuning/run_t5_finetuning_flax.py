@@ -319,6 +319,7 @@ def load_arguments():
 
 
 class T5Evaluator:
+    finetuner = None
     @classmethod
     def binary_f1(cls, y_true, y_pred):
         tp = jnp.sum((y_true == 1) & (y_pred == 1))
@@ -345,7 +346,9 @@ class T5Evaluator:
         ...
 
     @classmethod
-    def policy_detection(cls, finetuner, params, batch):
+    def policy_detection(cls, params, batch):
+
+        finetuner = cls.finetuner
         labels = batch.pop("labels")
 
         logits = finetuner.model(**batch, params=params, train=False)[0]
@@ -599,18 +602,12 @@ class T5Finetuner:
                         )
 
                         # Model forward
-                        if not eval_func:
-                            metrics = pad_shard_unpad(p_eval_step, static_argnums=(2,))(
-                                state.params, model_inputs, min_device_batch=per_device_eval_batch_size
-                            )
-                        else:
-                            metrics = pad_shard_unpad(p_eval_step, static_argnums=(2,))(self,
-                                                                                        state.params, model_inputs,
-                                                                                        min_device_batch=per_device_eval_batch_size)
+                        if eval_func:
+                            T5Evaluator.finetuner = self
+                        metrics = pad_shard_unpad(p_eval_step, static_return=True)(
+                            state.params, model_inputs, min_device_batch=per_device_eval_batch_size
+                        )
 
-                        # metrics = pad_shard_unpad(p_eval_step, static_return=True)(
-                        #     state.params, model_inputs, min_device_batch=per_device_eval_batch_size
-                        # )
                         eval_metrics.append(metrics)
 
                     # get eval metrics
@@ -989,7 +986,8 @@ class T5Finetuner:
 
         for task in tasks:
             if task not in PRIVACY_GLUE_TASKS:
-                raise ValueError(f"Task \"{task}\" not found in PrivacyGLUE benchmark.")
+                raise ValueError(f"Task \"{task}\" not found in PrivacyGLUE benchmark. "
+                                 f"Task must be one of {PRIVACY_GLUE_TASKS}")
 
             # Create a task directory
             self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
