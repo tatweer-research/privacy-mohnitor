@@ -133,38 +133,46 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
     return combined
 
 
+def generate_extra_ids(example: list):
+    return [f'<extra_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
+
+
+def combine_subtasks_labels(example: dict):
+    subtasks = example.keys()
+    tags = (example[subtask]['tags'] for subtask in subtasks)
+    combined_labels = map(list, zip(*tags))
+    combined_labels = map(set, combined_labels)
+
+    def filter_labels(labels):
+        if len(labels) > 1:
+            try:
+                labels.remove('O')
+            except KeyError:
+                pass
+        return labels
+
+    combined_labels = map(filter_labels, combined_labels)
+    combined_labels = map('.'.join, combined_labels)
+    example['COLLECT']['tags'] = list(combined_labels)
+    return example
+
+
+def add_extra_ids(example, mode='tags', subtask='COLLECT'):
+    extra_ids = generate_extra_ids(example)
+    transformed = []
+    for id, token in zip(extra_ids, example[subtask][mode]):
+        transformed += [' ' + id + ' ' + token]
+    return transformed
+
+
 def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 
-    def generate_extra_ids(example: list):
-        return [f'<extra_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
+    subtasks = ['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE']
 
-    def combine_subtasks_labels(example: dict):
-        subtasks = example.keys()
-        tags = (example[subtask]['tags'] for subtask in subtasks)
-        combined_labels = map(list, zip(*tags))
-        combined_labels = map(set, combined_labels)
-
-        def filter_labels(labels):
-            if len(labels) > 1:
-                try:
-                    labels.remove('O')
-                except KeyError:
-                    pass
-            return labels
-
-        combined_labels = map(filter_labels, combined_labels)
-        combined_labels = map('.'.join, combined_labels)
-        example['COLLECT']['tags'] = list(combined_labels)
-        return example
-
-    def add_extra_ids(example, mode='tags', subtask='COLLECT'):
-        extra_ids = generate_extra_ids(example)
-        transformed = []
-        for id, token in zip(extra_ids, example[subtask][mode]):
-            transformed += [' ' + id + ' ' + token]
-        return transformed
+    if subtask != 'combined' and subtask not in subtasks:
+        raise ValueError(f"subtask must be one of {subtasks} or 'combined'")
 
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
@@ -172,23 +180,23 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
             dataset = dataset.map(lambda example: {'text': f"piextract "
                                                            f"sentence:{''.join(add_extra_ids(combine_subtasks_labels(example), mode='tokens'))}",
                                                    'label': ''.join(add_extra_ids(example, mode='tags'))},
-                                  remove_columns= ['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE'])
+                                  remove_columns=subtasks)
             dataset_dict[split] = dataset
         else:
             dataset = dataset.map(lambda example: {'text': f"piextract "
                                                            f"sentence:{''.join(add_extra_ids(example, mode='tokens', subtask=subtask))}",
-                                                   'label': ''.join(add_extra_ids(example, mode='tags', subtask=subtask))},
-                                  remove_columns=['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE'])
+                                                   'label': ''.join(
+                                                       add_extra_ids(example, mode='tags', subtask=subtask))},
+                                  remove_columns=subtasks)
             dataset_dict[split] = dataset
 
     return dataset_dict
-
 
 
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
-    dataset_dict = to_text2text(subtask='combined')
+    dataset_dict = to_text2text(subtask='SHARE')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
