@@ -134,10 +134,12 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
 
 
 def generate_extra_ids(example: list):
+    """Generate extra ids for each token in one example."""
     return [f'<extra_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
 
 
 def combine_subtasks_labels(example: dict):
+    """Combines labels from all subtasks into one label. Labels are separated by a dot."""
     subtasks = example.keys()
     tags = (example[subtask]['tags'] for subtask in subtasks)
     combined_labels = map(list, zip(*tags))
@@ -158,6 +160,7 @@ def combine_subtasks_labels(example: dict):
 
 
 def add_extra_ids(example, mode='tags', subtask='COLLECT'):
+    """Adds extra ids to each token in one example."""
     extra_ids = generate_extra_ids(example)
     transformed = []
     for id, token in zip(extra_ids, example[subtask][mode]):
@@ -166,6 +169,8 @@ def add_extra_ids(example, mode='tags', subtask='COLLECT'):
 
 
 def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
+    """Converts the piextract dataset to a text2text dataset."""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
 
@@ -197,6 +202,6 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
-    dataset_dict = to_text2text(subtask='combined')
+    dataset_dict = to_text2text(subtask='COLLECT')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()

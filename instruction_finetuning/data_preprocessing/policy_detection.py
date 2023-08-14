@@ -49,6 +49,8 @@ def load_policy_detection(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/policy_detection'):
+    """Convert policy_detection dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
 

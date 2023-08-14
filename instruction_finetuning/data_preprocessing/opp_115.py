@@ -70,6 +70,8 @@ def load_opp_115(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/opp_115'):
+    """Convert opp_115 dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
     label_info = datasets.Sequence(datasets.ClassLabel(names=LABELS))

@@ -62,6 +62,8 @@ def load_policy_ie_a(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/policy_ie_a'):
+    """Convert privacy_qa dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
     # collect information about label
