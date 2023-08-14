@@ -75,7 +75,6 @@ def to_text2text(path='alzoubi36/policy_qa'):
                                                        f"context: {example['context']}",
                                                'label': f"{example['answers']['text'][0]}"},
                               remove_columns=['question', 'context', 'answers', 'id', 'title'])
-
         dataset_dict[split] = dataset
 
     return dataset_dict

@@ -116,6 +116,7 @@ def load_policy_ie_b(directory: str) -> datasets.DatasetDict:
 
     return combined
 
+
 def generate_extra_ids(example: list):
     """Generate extra ids for each token in one example."""
     return [f'<extra_id_{i}>' for i in range(len(example['type-I']['tokens']))]
