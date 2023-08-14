@@ -73,8 +73,7 @@ def to_text2text(path='alzoubi36/policy_qa'):
 
         dataset = dataset.map(lambda example: {'text': f"policy_qa question: {example['question']} "
                                                        f"context: {example['context']}",
-                                               'label': f"answer_start: {str(example['answers']['answer_start'][0])} "
-                                                        f"answer_end: {str(example['answers']['answer_start'][0] + len(example['answers']['text'][0]))}"},
+                                               'label': f"{example['answers']['text'][0]}"},
                               remove_columns=['question', 'context', 'answers', 'id', 'title'])
 
         dataset_dict[split] = dataset
