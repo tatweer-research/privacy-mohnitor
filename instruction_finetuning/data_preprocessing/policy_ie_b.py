@@ -116,25 +116,67 @@ def load_policy_ie_b(directory: str) -> datasets.DatasetDict:
 
     return combined
 
+def generate_extra_ids(example: list):
+    """Generate extra ids for each token in one example."""
+    return [f'<extra_id_{i}>' for i in range(len(example['type-I']['tokens']))]
 
-def to_text2text(path='alzoubi36/policy_ie_b'):
-    """Convert the dataset to text2text format"""
+
+def combine_subtasks_labels(example: dict):
+    """Combines labels from all subtasks into one label. Labels are separated by a dot."""
+    subtasks = example.keys()
+    tags = (example[subtask]['tags'] for subtask in subtasks)
+    combined_labels = map(list, zip(*tags))
+    combined_labels = map(set, combined_labels)
+
+    def filter_labels(labels):
+        if len(labels) > 1:
+            try:
+                labels.remove('O')
+            except KeyError:
+                pass
+        return labels
+
+    combined_labels = map(filter_labels, combined_labels)
+    combined_labels = map('.'.join, combined_labels)
+    example['type-I']['tags'] = list(combined_labels)
+    return example
+
+
+def add_extra_ids(example, mode='tags', subtask='type-I'):
+    """Adds extra ids to each token in one example."""
+    extra_ids = generate_extra_ids(example)
+    transformed = []
+    for id, token in zip(extra_ids, example[subtask][mode]):
+        transformed += [' ' + id + ' ' + token]
+    return transformed
+
+
+def to_text2text(path='alzoubi36/policy_ie_b', subtask: str = 'combined'):
+    """Converts the piextract dataset to a text2text dataset."""
 
     # Load the dataset
     dataset_dict = load_dataset(path)
 
+    subtasks = ['type-I', 'type-II']
+
+    if subtask != 'combined' and subtask not in subtasks:
+        raise ValueError(f"subtask must be one of {subtasks} or 'combined'")
+
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
-        temp_dataset = Dataset.from_dict({'data': dataset[SUBTASKS[0]] + dataset[SUBTASKS[1]]})
-
-        # Merge label columns into a single column
-        dataset = temp_dataset
-        dataset = dataset.map(lambda example: {
-            'text': f"policy_ie_b {example['data']['subtask']} tokens: {str(example['data']['tokens'])}",
-            'label': str(example['data']['tags'])},
-                              remove_columns=['data'])
-
-        dataset_dict[split] = dataset
+        if subtask == 'combined':
+            dataset = dataset.map(lambda example: {'text': f"policy_ie_b {subtask} "
+                                                           f"sentence:{''.join(add_extra_ids(combine_subtasks_labels(example), mode='tokens'))}",
+                                                   'label': ''.join(add_extra_ids(example, mode='tags'))},
+                                  remove_columns=subtasks)
+            dataset_dict[split] = dataset
+        else:
+            dataset = dataset.map(lambda example: {'text': f"policy_ie_b {subtask} "
+                                                           f"sentence:{''.join(add_extra_ids(example, mode='tokens', subtask=subtask))}",
+                                                   'label': ''.join(
+                                                       add_extra_ids(example, mode='tags', subtask=subtask))},
+                                  remove_columns=subtasks)
+            dataset_dict[split] = dataset
 
     return dataset_dict
 
@@ -143,6 +185,6 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_ie_b"
     # dataset_dict = load_policy_ie_b(directory)
-    dataset_dict = to_text2text()
+    dataset_dict = to_text2text(subtask='type-II')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
