@@ -182,13 +182,13 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
         if subtask == 'combined':
-            dataset = dataset.map(lambda example: {'text': f"piextract "
+            dataset = dataset.map(lambda example: {'text': f"piextract {subtask} "
                                                            f"sentence:{''.join(add_extra_ids(combine_subtasks_labels(example), mode='tokens'))}",
                                                    'label': ''.join(add_extra_ids(example, mode='tags'))},
                                   remove_columns=subtasks)
             dataset_dict[split] = dataset
         else:
-            dataset = dataset.map(lambda example: {'text': f"piextract "
+            dataset = dataset.map(lambda example: {'text': f"piextract {subtask} "
                                                            f"sentence:{''.join(add_extra_ids(example, mode='tokens', subtask=subtask))}",
                                                    'label': ''.join(
                                                        add_extra_ids(example, mode='tags', subtask=subtask))},
