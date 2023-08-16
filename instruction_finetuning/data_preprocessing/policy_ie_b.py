@@ -138,7 +138,7 @@ def combine_subtasks_labels(example: dict):
         return labels
 
     combined_labels = map(filter_labels, combined_labels)
-    combined_labels = map('.'.join, combined_labels)
+    combined_labels = map('&&'.join, combined_labels)
     example['type-I']['tags'] = list(combined_labels)
     return example
 
@@ -186,6 +186,6 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_ie_b"
     # dataset_dict = load_policy_ie_b(directory)
-    dataset_dict = to_text2text(subtask='type-II')
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()

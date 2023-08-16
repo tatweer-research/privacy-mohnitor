@@ -64,7 +64,7 @@ from transformers.utils import get_full_repo_name, send_example_telemetry
 
 from instruction_finetuning.data_preprocessing import text2text_functions
 from instruction_finetuning.data_preprocessing import TASKS as PRIVACY_GLUE_TASKS
-from utils import create_pdf_from_tensorboard, get_current_date
+from utils import create_pdf_from_tensorboard, get_current_date, push_model_to_hub
 
 MODEL_CONFIG_CLASSES = list(FLAX_MODEL_FOR_MASKED_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
@@ -147,6 +147,15 @@ class ModelArguments:
         metadata={
             "help": (
                 "The model checkpoint for weights initialization.Don't set if you want to train a model from scratch."
+            )
+        },
+    )
+
+    hub_save_name_or_path: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "The model to be pushed to the hub."
             )
         },
     )
@@ -320,6 +329,7 @@ def load_arguments():
 
 class T5Evaluator:
     finetuner = None
+
     @classmethod
     def binary_f1(cls, y_true, y_pred):
         tp = jnp.sum((y_true == 1) & (y_pred == 1))
@@ -347,7 +357,6 @@ class T5Evaluator:
 
     @classmethod
     def policy_detection(cls, params, batch):
-
         finetuner = cls.finetuner
         labels = batch.pop("labels")
 
@@ -357,6 +366,7 @@ class T5Evaluator:
             array = array[:, :1]
             # TODO: The token id for the privacy class is 1291
             #  Check if this is persistent across all models
+            #  or use tokenizer to get the id
             array = jnp.where(array == 1291, 1, 0).reshape(-1)
             return array
 
@@ -624,8 +634,8 @@ class T5Finetuner:
 
                     # Update progress bar
                     epochs.write(
-                        f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}, "
-                        f"F1_macro: {eval_metrics['f1_macro']}, F1_micro: {eval_metrics['f1_micro']})")
+                        f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}")
+                    # f"F1_macro: {eval_metrics['f1_macro']}, F1_micro: {eval_metrics['f1_micro']})")
 
                     # Save metrics
                     if self.has_tensorboard and jax.process_index() == 0:
@@ -924,38 +934,10 @@ class T5Finetuner:
 
         return new_state, metrics, new_dropout_rng
 
-    @staticmethod
-    def binary_f1(y_true, y_pred):
-        tp = jnp.sum((y_true == 1) & (y_pred == 1))
-        fp = jnp.sum((y_true == 0) & (y_pred == 1))
-        fn = jnp.sum((y_true == 1) & (y_pred == 0))
-        tn = jnp.sum((y_true == 0) & (y_pred == 0))
-
-        precision_a = tp / (tp + fp)
-        recall_a = tp / (tp + fn)
-
-        precision_b = tn / (tn + fn)
-        recall_b = tn / (tn + fp)
-
-        f1_a = 2 * (precision_a * recall_a) / (precision_a + recall_a)
-        f1_b = 2 * (precision_b * recall_b) / (precision_b + recall_b)
-
-        f1_macro = (f1_a + f1_b) / 2
-        f1_micro = (tp + tn) / (tp + tn + fp + fn)
-
-        return f1_macro, f1_micro, tp, tn, fp, fn
-
     def eval_step(self, params, batch):
         labels = batch.pop("labels")
 
         logits = self.model(**batch, params=params, train=False)[0]
-
-        def _make_binary(array):
-            array = array[:, :1]
-            # TODO: The token id for the privacy class is 1291
-            #  Check if this is persistent across all models
-            array = jnp.where(array == 1291, 1, 0).reshape(-1)
-            return array
 
         # compute loss
         loss = optax.softmax_cross_entropy(logits, onehot(labels, logits.shape[-1]))
@@ -963,16 +945,9 @@ class T5Finetuner:
         # compute accuracy
         accuracy = jnp.equal(jnp.argmax(logits, axis=-1), labels)
 
-        # TODO: Write F1 score for each task --> Discuss with @SantoshTokala
-        logits = _make_binary(jnp.argmax(logits, axis=-1))
-        labels = _make_binary(labels)
-        f1_macro, f1_micro, *other = self.binary_f1(labels, logits)
-
         # summarize metrics
         metrics = {"loss": loss.mean(), "accuracy": accuracy.mean()}
         metrics = jax.lax.pmean(metrics, axis_name="batch")
-        metrics["f1_macro"] = f1_macro
-        metrics["f1_micro"] = f1_micro
         return metrics
 
     def create_training_report(self):
@@ -1005,9 +980,19 @@ class T5Finetuner:
             self.linear_decay_lr_schedule_fn = None
 
             self.logger.info(f'======================= Finetuning on task {task}... =======================')
-            # TODO: change
-            self.finetune(eval_func=self.eval_functions[task], task=task)
-            # self.finetune(task=task)
+
+            self.finetune(task=task)
+
+            if self.model_args.hub_save_name_or_path:
+                # Free memory
+                self.model = None
+                try:
+                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
+                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
+                except Exception as e:
+                    self.logger.info(f'Error pushing best model to hub: {e}')
+                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'latest_model'),
+                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
 
 if __name__ == "__main__":

@@ -154,7 +154,7 @@ def combine_subtasks_labels(example: dict):
         return labels
 
     combined_labels = map(filter_labels, combined_labels)
-    combined_labels = map('.'.join, combined_labels)
+    combined_labels = map('&&'.join, combined_labels)
     example['COLLECT']['tags'] = list(combined_labels)
     return example
 
@@ -202,6 +202,6 @@ if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
-    dataset_dict = to_text2text(subtask='COLLECT')
+    dataset_dict = to_text2text(subtask='combined')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()
