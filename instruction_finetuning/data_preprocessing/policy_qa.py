@@ -63,6 +63,8 @@ def load_policy_qa(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/policy_qa'):
+    """Converts the policy_qa dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
 
@@ -71,10 +73,8 @@ def to_text2text(path='alzoubi36/policy_qa'):
 
         dataset = dataset.map(lambda example: {'text': f"policy_qa question: {example['question']} "
                                                        f"context: {example['context']}",
-                                               'label': f"answer_start: {str(example['answers']['answer_start'][0])} "
-                                                        f"answer_end: {str(example['answers']['answer_start'][0] + len(example['answers']['text'][0]))}"},
+                                               'label': f"{example['answers']['text'][0]}"},
                               remove_columns=['question', 'context', 'answers', 'id', 'title'])
-
         dataset_dict[split] = dataset
 
     return dataset_dict
@@ -83,6 +83,7 @@ def to_text2text(path='alzoubi36/policy_qa'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_qa"
-    dataset_dict = load_policy_qa(directory)
+    # dataset_dict = load_policy_qa(directory)
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()

@@ -4,7 +4,7 @@
 import os
 from glob import glob
 from typing import Dict, List, Tuple
-from datasets import Dataset, load_dataset
+from datasets import Dataset, load_dataset, DatasetDict
 import datasets
 
 
@@ -133,22 +133,67 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
     return combined
 
 
-def to_text2text(path='alzoubi36/piextract'):
+def generate_extra_ids(example: list):
+    """Generate extra ids for each token in one example."""
+    return [f'<extra_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
+
+
+def combine_subtasks_labels(example: dict):
+    """Combines labels from all subtasks into one label. Labels are separated by a dot."""
+    subtasks = example.keys()
+    tags = (example[subtask]['tags'] for subtask in subtasks)
+    combined_labels = map(list, zip(*tags))
+    combined_labels = map(set, combined_labels)
+
+    def filter_labels(labels):
+        if len(labels) > 1:
+            try:
+                labels.remove('O')
+            except KeyError:
+                pass
+        return labels
+
+    combined_labels = map(filter_labels, combined_labels)
+    combined_labels = map('&&'.join, combined_labels)
+    example['COLLECT']['tags'] = list(combined_labels)
+    return example
+
+
+def add_extra_ids(example, mode='tags', subtask='COLLECT'):
+    """Adds extra ids to each token in one example."""
+    extra_ids = generate_extra_ids(example)
+    transformed = []
+    for id, token in zip(extra_ids, example[subtask][mode]):
+        transformed += [' ' + id + ' ' + token]
+    return transformed
+
+
+def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
+    """Converts the piextract dataset to a text2text dataset."""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
 
+    subtasks = ['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE']
+
+    if subtask != 'combined' and subtask not in subtasks:
+        raise ValueError(f"subtask must be one of {subtasks} or 'combined'")
+
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]
-        temp_dataset = Dataset.from_dict({'data': dataset[SUBTASKS[0]] + dataset[SUBTASKS[1]] +
-                                                  dataset[SUBTASKS[2]] + dataset[SUBTASKS[3]]})
-        # Merge label columns into a single column
-        dataset = temp_dataset
-        dataset = dataset.map(lambda example: {'text': f"piextract {example['data']['subtask']} "
-                                                       f"tokens: {str(example['data']['tokens'])}",
-                                               'label': str(example['data']['tags'])},
-                              remove_columns=['data'])
-
-        dataset_dict[split] = dataset
+        if subtask == 'combined':
+            dataset = dataset.map(lambda example: {'text': f"piextract {subtask} "
+                                                           f"sentence:{''.join(add_extra_ids(combine_subtasks_labels(example), mode='tokens'))}",
+                                                   'label': ''.join(add_extra_ids(example, mode='tags'))},
+                                  remove_columns=subtasks)
+            dataset_dict[split] = dataset
+        else:
+            dataset = dataset.map(lambda example: {'text': f"piextract {subtask} "
+                                                           f"sentence:{''.join(add_extra_ids(example, mode='tokens', subtask=subtask))}",
+                                                   'label': ''.join(
+                                                       add_extra_ids(example, mode='tags', subtask=subtask))},
+                                  remove_columns=subtasks)
+            dataset_dict[split] = dataset
 
     return dataset_dict
 
@@ -156,6 +201,7 @@ def to_text2text(path='alzoubi36/piextract'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
-    dataset_dict = load_piextract(directory)
+    # dataset_dict = load_piextract(directory)
+    dataset_dict = to_text2text(subtask='combined')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()

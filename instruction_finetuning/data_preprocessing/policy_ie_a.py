@@ -62,6 +62,8 @@ def load_policy_ie_a(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/policy_ie_a'):
+    """Convert privacy_qa dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
     # collect information about label
@@ -87,6 +89,7 @@ def to_text2text(path='alzoubi36/policy_ie_a'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_ie_a"
-    dataset_dict = load_policy_ie_a(directory)
+    # dataset_dict = load_policy_ie_a(directory)
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
     print()

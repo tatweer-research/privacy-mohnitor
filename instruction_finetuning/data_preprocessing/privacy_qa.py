@@ -54,6 +54,8 @@ def load_privacy_qa(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/privacy_qa'):
+    """Convert privacy_qa dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
     # collect information about label
@@ -63,7 +65,7 @@ def to_text2text(path='alzoubi36/privacy_qa'):
         dataset = dataset_dict[split]
         # Add prefix to each datapoint
         dataset = dataset.map(
-            lambda example: {'text': f"privacy_qa question: {example['question']} text: {example['text']}",
+            lambda example: {'text': f"privacy_qa question: {example['question']} answer: {example['text']}",
                              'label': example['label']}, remove_columns=['question'])
 
         dataset = dataset.map(
@@ -80,6 +82,7 @@ def to_text2text(path='alzoubi36/privacy_qa'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\privacy_qa"
-    dataset_dict = load_privacy_qa(directory)
+    # dataset_dict = load_privacy_qa(directory)
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/privacy_qa')
     print()

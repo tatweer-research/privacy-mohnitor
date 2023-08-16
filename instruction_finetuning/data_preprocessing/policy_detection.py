@@ -49,6 +49,8 @@ def load_policy_detection(directory: str) -> datasets.DatasetDict:
 
 
 def to_text2text(path='alzoubi36/policy_detection'):
+    """Convert policy_detection dataset to text2text format"""
+
     # Load the dataset
     dataset_dict = load_dataset(path)
 
@@ -70,5 +72,7 @@ def to_text2text(path='alzoubi36/policy_detection'):
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_detection"
-    dataset_dict = load_policy_detection(directory)
+    # dataset_dict = load_policy_detection(directory)
+    dataset_dict = to_text2text()
     # dataset_dict.push_to_hub('alzoubi36/policy_detection')
+    print()
