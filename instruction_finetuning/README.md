@@ -16,23 +16,9 @@ The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/priva
 ## Available Models([here](https://huggingface.co/alzoubi36))
 
 
-Number of current models including the 8 pretrained on Privaseer: 82
+Number of current models including the 8 pretrained on Privaseer: 84
 
 ### base
-
-
-|                   |   t5 |   t5-v1.1 |   priva_t5 |   priva_t5-v1.1 |
-|:------------------|-----:|----------:|-----------:|----------------:|
-| policy\_ie\_a     |    1 |         1 |          1 |               1 |
-| opp\_115          |    1 |         1 |          1 |               1 |
-| piextract         |    1 |         1 |          1 |               1 |
-| policy\_detection |    1 |         1 |          1 |               1 |
-| policy\_ie\_b     |    1 |         1 |          1 |               1 |
-| policy\_qa        |    1 |         1 |          1 |               1 |
-| privacy\_qa       |    1 |         1 |          0 |               0 |
- 
-
-### small
 
 
 |                   |   t5 |   t5-v1.1 |   priva_t5 |   priva_t5-v1.1 |
@@ -72,5 +58,19 @@ Number of current models including the 8 pretrained on Privaseer: 82
 | policy\_ie\_b     |    0 |         0 |          0 |               0 |
 | policy\_qa        |    0 |         0 |          0 |               0 |
 | privacy\_qa       |    0 |         0 |          0 |               0 |
+ 
+
+### small
+
+
+|                   |   t5 |   t5-v1.1 |   priva_t5 |   priva_t5-v1.1 |
+|:------------------|-----:|----------:|-----------:|----------------:|
+| policy\_ie\_a     |    1 |         1 |          1 |               1 |
+| opp\_115          |    1 |         1 |          1 |               1 |
+| piextract         |    1 |         1 |          1 |               1 |
+| policy\_detection |    1 |         1 |          1 |               1 |
+| policy\_ie\_b     |    1 |         1 |          1 |               1 |
+| policy\_qa        |    1 |         1 |          1 |               1 |
+| privacy\_qa       |    1 |         1 |          1 |               1 |
  
 
