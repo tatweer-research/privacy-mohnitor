@@ -144,6 +144,7 @@ def pivot_dict_to_html_and_save(pivot_dict, file_path):
 
 
 def pivot_dict_to_markdown_and_save(pivot_dict, file_path):
+    model_sizes = ['small', 'base', 'large', '3b']
     # Convert dictionary items (table name and DataFrame) to Markdown content
     markdown_content = f"""## PrivacyGLUE
 
@@ -162,7 +163,8 @@ The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/priva
 
 ## Available Models([here](https://huggingface.co/alzoubi36))\n\n
 Number of current models including the 8 pretrained on Privaseer: {len(model_names)}\n\n"""
-    for table_name, pivot_df in pivot_dict.items():
+    for table_name in model_sizes:
+        pivot_df = pivot_dict[table_name]
         markdown_content += f"### {table_name}\n\n"
         markdown_content += "\n"
 
