@@ -1,6 +1,6 @@
 ## PrivacyGLUE
 
-The instruction finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/privacy-glue) dataset proposed by [Shankar et al.](https://www.mdpi.com/2076-3417/13/6/3701).
+The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/privacy-glue) dataset proposed by [Shankar et al.](https://www.mdpi.com/2076-3417/13/6/3701).
 
 
 ## Tasks
@@ -13,21 +13,9 @@ The instruction finetuning is based on the [PrivacyGLUE](https://github.com/infs
 - PolicyQA
 - PrivacyQA
 
-## Available Models
+## Available Models([here](https://huggingface.co/alzoubi36))
 
-### base
-
-
-|                   |   t5 |   t5-v1.1 |   priva_t5 |   priva_t5-v1.1 |
-|:------------------|-----:|----------:|-----------:|----------------:|
-| policy\_ie\_a     |    1 |         1 |          1 |               1 |
-| opp\_115          |    1 |         1 |          1 |               1 |
-| piextract         |    1 |         1 |          1 |               1 |
-| policy\_detection |    1 |         1 |          1 |               1 |
-| policy\_ie\_b     |    1 |         1 |          1 |               1 |
-| policy\_qa        |    1 |         1 |          1 |               1 |
-| privacy\_qa       |    1 |         1 |          0 |               0 |
- 
+Number of current models: 79
 
 ### small
 
@@ -41,6 +29,20 @@ The instruction finetuning is based on the [PrivacyGLUE](https://github.com/infs
 | policy\_ie\_b     |    1 |         1 |          1 |               1 |
 | policy\_qa        |    1 |         1 |          1 |               1 |
 | privacy\_qa       |    1 |         1 |          1 |               1 |
+ 
+
+### base
+
+
+|                   |   t5 |   t5-v1.1 |   priva_t5 |   priva_t5-v1.1 |
+|:------------------|-----:|----------:|-----------:|----------------:|
+| policy\_ie\_a     |    1 |         1 |          1 |               1 |
+| opp\_115          |    1 |         1 |          1 |               1 |
+| piextract         |    1 |         1 |          1 |               1 |
+| policy\_detection |    1 |         1 |          1 |               1 |
+| policy\_ie\_b     |    1 |         1 |          1 |               1 |
+| policy\_qa        |    1 |         1 |          1 |               1 |
+| privacy\_qa       |    1 |         1 |          0 |               0 |
  
 
 ### large
