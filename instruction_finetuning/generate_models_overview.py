@@ -16,7 +16,6 @@ def list_models(params):
         return None
 
 
-# Example usage
 params = {
     # "search": "resnet",
     "author": "alzoubi36",
@@ -27,23 +26,6 @@ params = {
     "full": "false",
     "config": "false"
 }
-
-models_info = list_models(params)
-model_names = [model["modelId"] for model in models_info]
-print("Number of current models: ", len(models_info))
-
-
-# if models_info:
-#     for model in models_info:
-#         # print(f"Model Name: {model['modelId']}")
-#         print(model['modelId'])
-#         # print(f"Author: {model['author']}")
-#         # print(f"Tags: {', '.join(model['tags'])}")
-#         # print(f"Downloads: {model['downloads']}")
-#         # print(f"Last Modified: {model['lastModified']}")
-#         # print("-" * 40)
-# else:
-#     print("No models found.")
 
 
 def get_task_name(model_name):
@@ -87,9 +69,6 @@ def create_tables(model_names):
         tables[size] = df
 
     return tables
-
-
-tables = create_tables(model_names)
 
 
 def pivot_list_to_html_and_save(pivot_dfs, file_path):
@@ -180,7 +159,24 @@ Number of current models including the 8 pretrained on Privaseer: {len(model_nam
         file.write(markdown_content)
 
 
-# Usage example
-# pivot_dict_to_html_and_save(tables, f'result.html')
+if __name__ == '__main__':
+    models_info = list_models(params)
+    model_names = [model["modelId"] for model in models_info]
+    print("Number of current models: ", len(models_info))
 
-pivot_dict_to_markdown_and_save(tables, f'README.md')
+    # if models_info:
+    #     for model in models_info:
+    #         print(f"Model Name: {model['modelId']}")
+    #         print(f"Author: {model['author']}")
+    #         print(f"Tags: {', '.join(model['tags'])}")
+    #         print(f"Downloads: {model['downloads']}")
+    #         print(f"Last Modified: {model['lastModified']}")
+    #         print("-" * 40)
+    # else:
+    #     print("No models found.")
+
+    tables = create_tables(model_names)
+
+    # Usage example
+    # pivot_dict_to_html_and_save(tables, f'result.html')
+    pivot_dict_to_markdown_and_save(tables, f'README.md')

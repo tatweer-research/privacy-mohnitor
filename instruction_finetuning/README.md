@@ -13,7 +13,7 @@ The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/priva
 - PolicyQA
 - PrivacyQA
 
-## Available Models([here](https://huggingface.co/alzoubi36))
+## Available Models ([here](https://huggingface.co/alzoubi36))
 
 
 Number of current models including the 8 pretrained on Privaseer: 84
