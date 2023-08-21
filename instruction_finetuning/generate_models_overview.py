@@ -31,6 +31,8 @@ params = {
 models_info = list_models(params)
 model_names = [model["modelId"] for model in models_info]
 print("Number of current models: ", len(models_info))
+
+
 # if models_info:
 #     for model in models_info:
 #         # print(f"Model Name: {model['modelId']}")
@@ -42,7 +44,6 @@ print("Number of current models: ", len(models_info))
 #         # print("-" * 40)
 # else:
 #     print("No models found.")
-
 
 
 def get_task_name(model_name):
