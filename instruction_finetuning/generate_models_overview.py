@@ -144,9 +144,9 @@ def pivot_dict_to_html_and_save(pivot_dict, file_path):
 
 def pivot_dict_to_markdown_and_save(pivot_dict, file_path):
     # Convert dictionary items (table name and DataFrame) to Markdown content
-    markdown_content = """## PrivacyGLUE
+    markdown_content = f"""## PrivacyGLUE
 
-The instruction finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/privacy-glue) dataset proposed by [Shankar et al.](https://www.mdpi.com/2076-3417/13/6/3701).
+The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/privacy-glue) dataset proposed by [Shankar et al.](https://www.mdpi.com/2076-3417/13/6/3701).
 
 
 ## Tasks
@@ -159,7 +159,7 @@ The instruction finetuning is based on the [PrivacyGLUE](https://github.com/infs
 - PolicyQA
 - PrivacyQA
 
-## Available Models\n\n"""
+## Available Models([here](https://huggingface.co/alzoubi36))\n\nNumber of current models: {len(model_names)}\n\n"""
     for table_name, pivot_df in pivot_dict.items():
         markdown_content += f"### {table_name}\n\n"
         markdown_content += "\n"
