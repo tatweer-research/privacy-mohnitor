@@ -159,7 +159,8 @@ The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/priva
 - PolicyQA
 - PrivacyQA
 
-## Available Models([here](https://huggingface.co/alzoubi36))\n\nNumber of current models: {len(model_names)}\n\n"""
+## Available Models([here](https://huggingface.co/alzoubi36))\n\n
+Number of current models including the 8 pretrained on Privaseer: {len(model_names)}\n\n"""
     for table_name, pivot_df in pivot_dict.items():
         markdown_content += f"### {table_name}\n\n"
         markdown_content += "\n"
