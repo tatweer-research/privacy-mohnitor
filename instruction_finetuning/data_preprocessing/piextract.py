@@ -174,7 +174,7 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     # Load the dataset
     dataset_dict = load_dataset(path)
 
-    subtasks = ['COLLECT', 'NOT_COLLECT', 'NOT_SHARE', 'SHARE']
+    subtasks = SUBTASKS
 
     if subtask != 'combined' and subtask not in subtasks:
         raise ValueError(f"subtask must be one of {subtasks} or 'combined'")
@@ -196,6 +196,30 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
             dataset_dict[split] = dataset
 
     return dataset_dict
+
+
+def split_labels(label_list, required_subtask='COLLECT'):
+    required_subtask = '-' + required_subtask
+    for i, label in enumerate(label_list):
+        if required_subtask in label:
+            temp = label.split('&&')
+            temp = filter(lambda x: required_subtask in x, temp)
+            label_list[i] = next(temp)
+        else:
+            label_list[i] = 'O'
+    return label_list
+
+
+def label_from_text(label, required_subtask, mode='combined'):
+    subtasks = SUBTASKS
+    if required_subtask not in subtasks:
+        raise ValueError(f"required_subtask must be one of {subtasks}")
+
+    if mode == 'combined':
+        labels = label.split()[1::2]  # Splitting and selecting odd-indexed elements
+        return split_labels(labels, required_subtask=required_subtask)
+    else:
+        return label.split()[1::2]
 
 
 if __name__ == "__main__":
