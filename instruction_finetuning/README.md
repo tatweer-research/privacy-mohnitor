@@ -13,10 +13,10 @@ The finetuning is based on the [PrivacyGLUE](https://github.com/infsys-lab/priva
 - PolicyQA
 - PrivacyQA
 
-## Available Models ([here](https://huggingface.co/alzoubi36))
+## Available Models([here](https://huggingface.co/alzoubi36))
 
 
-Number of current models including the 8 pretrained on Privaseer: 84
+Number of current models including the 8 pretrained on Privaseer: 85
 
 ### small
 
@@ -51,7 +51,7 @@ Number of current models including the 8 pretrained on Privaseer: 84
 
 |                   |   t5 |   t5-v1.1 |   priva_t5 |   priva_t5-v1.1 |
 |:------------------|-----:|----------:|-----------:|----------------:|
-| policy\_ie\_a     |    1 |         1 |          1 |               0 |
+| policy\_ie\_a     |    1 |         1 |          1 |               1 |
 | opp\_115          |    1 |         1 |          1 |               0 |
 | piextract         |    1 |         1 |          1 |               0 |
 | policy\_detection |    1 |         1 |          1 |               0 |
