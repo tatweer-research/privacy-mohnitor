@@ -69,6 +69,11 @@ def to_text2text(path='alzoubi36/policy_detection'):
     return dataset_dict
 
 
+def label_from_text(label):
+    label_mapping = {'policy': 1, 'not policy': 0}
+    return label_mapping[label]
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_detection"

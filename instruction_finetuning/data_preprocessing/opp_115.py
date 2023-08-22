@@ -95,6 +95,12 @@ def to_text2text(path='alzoubi36/opp_115'):
     return dataset_dict
 
 
+def label_from_text(label):
+    label_info = datasets.Sequence(datasets.ClassLabel(names=LABELS))
+    labels = label.split('\n')
+    return [label_info.feature.str2int(label_) for label_ in labels]
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\opp_115"
