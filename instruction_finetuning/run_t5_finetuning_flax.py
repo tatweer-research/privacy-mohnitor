@@ -751,7 +751,7 @@ class T5Finetuner:
                                   truncation=True,
                                   return_attention_mask=False)
             data["labels"] = self.tokenizer(examples['label'],
-                                            max_length=16,
+                                            max_length=max_seq_length,
                                             padding="max_length",
                                             truncation=True,
                                             return_attention_mask=False)["input_ids"]

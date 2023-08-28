@@ -135,7 +135,7 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
 
 def generate_extra_ids(example: list):
     """Generate extra ids for each token in one example."""
-    return [f'<extra_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
+    return [f'<token_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
 
 
 def combine_subtasks_labels(example: dict):

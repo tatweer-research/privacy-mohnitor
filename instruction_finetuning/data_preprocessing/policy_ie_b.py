@@ -119,7 +119,7 @@ def load_policy_ie_b(directory: str) -> datasets.DatasetDict:
 
 def generate_extra_ids(example: list):
     """Generate extra ids for each token in one example."""
-    return [f'<extra_id_{i}>' for i in range(len(example['type-I']['tokens']))]
+    return [f'<token_id_{i}>' for i in range(len(example['type-I']['tokens']))]
 
 
 def combine_subtasks_labels(example: dict):
@@ -156,7 +156,7 @@ def to_text2text(path='alzoubi36/policy_ie_b', subtask: str = 'combined'):
     """Converts the piextract dataset to a text2text dataset."""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, downlowd_mode='force_redownload')
 
     subtasks = SUBTASKS
 
