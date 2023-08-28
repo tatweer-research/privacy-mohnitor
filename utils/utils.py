@@ -21,7 +21,7 @@ def generate_model_card(model_name='alzoubi36/t5-test'):
 
 def push_model_to_hub(path_to_model='t5-small', model_name='alzoubi36/t5-test'):
     FlaxT5ForConditionalGeneration.from_pretrained(path_to_model).push_to_hub(model_name,
-                                                                              use_auth_token='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')
+                                                                              use_auth_token='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')
 
 
 if __name__ == '__main__':

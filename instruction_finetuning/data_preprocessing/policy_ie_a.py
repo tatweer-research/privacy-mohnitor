@@ -86,6 +86,11 @@ def to_text2text(path='alzoubi36/policy_ie_a'):
     return dataset_dict
 
 
+def label_from_text(label):
+    label_info = datasets.ClassLabel(names=LABELS)
+    return label_info.str2int(label)
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_ie_a"

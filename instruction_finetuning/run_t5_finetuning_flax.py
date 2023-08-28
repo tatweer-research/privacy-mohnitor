@@ -751,7 +751,7 @@ class T5Finetuner:
                                   truncation=True,
                                   return_attention_mask=False)
             data["labels"] = self.tokenizer(examples['label'],
-                                            max_length=16,
+                                            max_length=max_seq_length,
                                             padding="max_length",
                                             truncation=True,
                                             return_attention_mask=False)["input_ids"]
@@ -957,7 +957,8 @@ class T5Finetuner:
 
     def finetune_on_privacy_glue(self):
         tasks = self.training_args.tasks
-        self.logger.info(f'======================= Finetuning T5 on the following tasks: =======================')
+        self.logger.info(f'======================= Finetuning {self.model_args.model_name_or_path} on the following '
+                         f'tasks: =======================')
         self.logger.info(f'{tasks}')
 
         for task in tasks:

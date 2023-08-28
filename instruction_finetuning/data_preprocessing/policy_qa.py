@@ -80,6 +80,10 @@ def to_text2text(path='alzoubi36/policy_qa'):
     return dataset_dict
 
 
+def label_from_text(label):
+    raise NotImplementedError("No need to implement this function for policy_qa dataset")
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\policy_qa"

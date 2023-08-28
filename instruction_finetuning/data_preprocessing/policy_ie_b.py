@@ -119,7 +119,7 @@ def load_policy_ie_b(directory: str) -> datasets.DatasetDict:
 
 def generate_extra_ids(example: list):
     """Generate extra ids for each token in one example."""
-    return [f'<extra_id_{i}>' for i in range(len(example['type-I']['tokens']))]
+    return [f'<token_id_{i}>' for i in range(len(example['type-I']['tokens']))]
 
 
 def combine_subtasks_labels(example: dict):
@@ -156,9 +156,9 @@ def to_text2text(path='alzoubi36/policy_ie_b', subtask: str = 'combined'):
     """Converts the piextract dataset to a text2text dataset."""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, downlowd_mode='force_redownload')
 
-    subtasks = ['type-I', 'type-II']
+    subtasks = SUBTASKS
 
     if subtask != 'combined' and subtask not in subtasks:
         raise ValueError(f"subtask must be one of {subtasks} or 'combined'")
@@ -180,6 +180,35 @@ def to_text2text(path='alzoubi36/policy_ie_b', subtask: str = 'combined'):
             dataset_dict[split] = dataset
 
     return dataset_dict
+
+
+def split_labels(label_list, required_subtask='type-I'):
+    all_subtask_labels = LABELS[SUBTASKS.index(required_subtask)]
+    for i, label in enumerate(label_list):
+        boolean_list = []
+        for subtask_label in all_subtask_labels:
+            subtask_label = '-' + subtask_label
+            boolean_list.append(subtask_label in label)
+            if subtask_label in label:
+                temp = label.split('&&')
+                temp = filter(lambda x: subtask_label in x, temp)
+                label_list[i] = next(temp)
+                break
+        if not any(boolean_list):
+            label_list[i] = 'O'
+    return label_list
+
+
+def label_from_text(label, required_subtask, mode='combined'):
+    subtasks = SUBTASKS
+    if required_subtask not in subtasks:
+        raise ValueError(f"required_subtask must be one of {subtasks}")
+
+    if mode == 'combined':
+        labels = label.split()[1::2]  # Splitting and selecting odd-indexed elements
+        return split_labels(labels, required_subtask=required_subtask)
+    else:
+        return label.split()[1::2]
 
 
 if __name__ == "__main__":
