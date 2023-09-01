@@ -9,3 +9,4 @@ tensorboard
 tensorflow
 sentencepiece
 seaborn
+torch

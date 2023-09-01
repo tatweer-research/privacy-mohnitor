@@ -156,7 +156,7 @@ def to_text2text(path='alzoubi36/policy_ie_b', subtask: str = 'combined'):
     """Converts the piextract dataset to a text2text dataset."""
 
     # Load the dataset
-    dataset_dict = load_dataset(path, downlowd_mode='force_redownload')
+    dataset_dict = load_dataset(path, download_mode='force_redownload')
 
     subtasks = SUBTASKS
 

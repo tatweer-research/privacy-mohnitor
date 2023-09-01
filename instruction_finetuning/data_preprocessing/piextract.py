@@ -135,7 +135,7 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
 
 def generate_extra_ids(example: list):
     """Generate extra ids for each token in one example."""
-    return [f'<token_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
+    return [f'token_id_{i}' for i in range(len(example['COLLECT']['tokens']))]
 
 
 def combine_subtasks_labels(example: dict):
@@ -172,7 +172,7 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     """Converts the piextract dataset to a text2text dataset."""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, download_mode='force_redownload')
 
     subtasks = SUBTASKS
 
