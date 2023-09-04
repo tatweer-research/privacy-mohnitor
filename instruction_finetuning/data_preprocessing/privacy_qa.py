@@ -57,7 +57,7 @@ def to_text2text(path='alzoubi36/privacy_qa'):
     """Convert privacy_qa dataset to text2text format"""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, download_mode='force_redownload')
     # collect information about label
     label_info = datasets.ClassLabel(names=LABELS)
 

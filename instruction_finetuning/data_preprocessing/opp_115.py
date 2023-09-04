@@ -73,7 +73,7 @@ def to_text2text(path='alzoubi36/opp_115'):
     """Convert opp_115 dataset to text2text format"""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, download_mode='force_redownload')
     label_info = datasets.Sequence(datasets.ClassLabel(names=LABELS))
 
     for split in dataset_dict.keys():

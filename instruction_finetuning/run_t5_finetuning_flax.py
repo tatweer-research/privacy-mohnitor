@@ -625,9 +625,9 @@ class T5Finetuner:
                     eval_metrics = get_metrics(eval_metrics)
 
                     # TODO: change
-                    self.has_tensorboard = False
-                    if epoch in range(85, 100):
-                        print()
+                    # self.has_tensorboard = False
+                    # if epoch in range(85, 100):
+                    #     print()
 
                     eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
@@ -961,8 +961,8 @@ class T5Finetuner:
         # TODO: change
         metrics = {"loss": loss.mean(), "accuracy": accuracy.mean()}
         metrics = jax.lax.pmean(metrics, axis_name="batch")
-        metrics["logits"] = jnp.argmax(logits, axis=-1)
-        metrics["batch"] = batch
+        # metrics["logits"] = jnp.argmax(logits, axis=-1)
+        # metrics["batch"] = batch
         return metrics
 
     def create_training_report(self):
