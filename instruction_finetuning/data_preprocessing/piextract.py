@@ -222,10 +222,25 @@ def label_from_text(label, required_subtask, mode='combined'):
         return label.split()[1::2]
 
 
+def label_from_text_functionality_checker():
+    from tqdm import tqdm
+
+    SPLIT = 'train'
+    SUBTASK = SUBTASKS[1]
+    dataset = load_dataset(path='alzoubi36/piextract')[SPLIT]
+    tansformed_dataset = to_text2text()[SPLIT]
+    for i in tqdm(range(len(dataset))):
+        example = dataset[SUBTASK][i]['tags']
+        transformed_example = label_from_text(tansformed_dataset[i]['label'], SUBTASK)
+        assert transformed_example == example, f"Example {i} is not equal"
+        print()
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
     dataset_dict = to_text2text(subtask='combined')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
+    # label_from_text_functionality_checker()
     print()
