@@ -623,6 +623,12 @@ class T5Finetuner:
 
                     # get eval metrics
                     eval_metrics = get_metrics(eval_metrics)
+
+                    # TODO: change
+                    # self.has_tensorboard = False
+                    # if epoch in range(85, 100):
+                    #     print()
+
                     eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
                     if eval_metrics['accuracy'] > best_eval_metric:
@@ -814,6 +820,11 @@ class T5Finetuner:
                 "You are instantiating a new tokenizer from scratch. This is not supported by this script."
                 "You can do it from another script, save it, and load it from here, using --tokenizer_name."
             )
+
+        # TODO: change
+        # special_tokens = [f'token_id_{i}' for i in range(300)] + \
+        #                  tokenizer.special_tokens_map['additional_special_tokens']
+        # tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
         return tokenizer
 
     def load_finetuning_dataset(self, task='policy_detection'):
@@ -947,8 +958,11 @@ class T5Finetuner:
         accuracy = jnp.equal(jnp.argmax(logits, axis=-1), labels)
 
         # summarize metrics
+        # TODO: change
         metrics = {"loss": loss.mean(), "accuracy": accuracy.mean()}
         metrics = jax.lax.pmean(metrics, axis_name="batch")
+        # metrics["logits"] = jnp.argmax(logits, axis=-1)
+        # metrics["batch"] = batch
         return metrics
 
     def create_training_report(self):

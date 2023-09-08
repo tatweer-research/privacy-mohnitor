@@ -17,3 +17,5 @@ source venvs/pm/bin/activate
 
 # Install requirements
 pip install -r privacy-mohnitor/instruction_finetuning/requirements.txt
+
+# Use "chmod +x setup_vm.sh" to make this file executable

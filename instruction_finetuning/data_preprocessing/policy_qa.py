@@ -66,7 +66,7 @@ def to_text2text(path='alzoubi36/policy_qa'):
     """Converts the policy_qa dataset to text2text format"""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, download_mode='force_redownload')
 
     for split in dataset_dict.keys():
         dataset = dataset_dict[split]

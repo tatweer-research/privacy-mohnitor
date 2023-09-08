@@ -135,7 +135,7 @@ def load_piextract(directory: str) -> datasets.DatasetDict:
 
 def generate_extra_ids(example: list):
     """Generate extra ids for each token in one example."""
-    return [f'<token_id_{i}>' for i in range(len(example['COLLECT']['tokens']))]
+    return [f'token_id_{i}' for i in range(len(example['COLLECT']['tokens']))]
 
 
 def combine_subtasks_labels(example: dict):
@@ -172,7 +172,7 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     """Converts the piextract dataset to a text2text dataset."""
 
     # Load the dataset
-    dataset_dict = load_dataset(path)
+    dataset_dict = load_dataset(path, download_mode='force_redownload')
 
     subtasks = SUBTASKS
 
@@ -222,10 +222,25 @@ def label_from_text(label, required_subtask, mode='combined'):
         return label.split()[1::2]
 
 
+def label_from_text_functionality_checker():
+    from tqdm import tqdm
+
+    SPLIT = 'train'
+    SUBTASK = SUBTASKS[1]
+    dataset = load_dataset(path='alzoubi36/piextract')[SPLIT]
+    tansformed_dataset = to_text2text()[SPLIT]
+    for i in tqdm(range(len(dataset))):
+        example = dataset[SUBTASK][i]['tags']
+        transformed_example = label_from_text(tansformed_dataset[i]['label'], SUBTASK)
+        assert transformed_example == example, f"Example {i} is not equal"
+        print()
+
+
 if __name__ == "__main__":
     directory = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
                 r"\piextract"
     # dataset_dict = load_piextract(directory)
     dataset_dict = to_text2text(subtask='combined')
     # dataset_dict.push_to_hub('alzoubi36/policy_ie_a')
+    # label_from_text_functionality_checker()
     print()
