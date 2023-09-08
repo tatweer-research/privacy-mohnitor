@@ -12,26 +12,26 @@ from transformers import (
 from instruction_finetuning.data_preprocessing import text2text_functions
 from tqdm import tqdm
 
-FLAX = False
-PT = True
+FLAX = True
+PT = False
 
 
-def initialize_model(model_name):
-    tokenizer = AutoTokenizer.from_pretrained("t5-small", use_fast=True)
+def initialize_model(model_name, tokenizer_name, use_flax=FLAX, use_pt=PT):
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
     models = {'flax': '', 'pt': ''}
-    if FLAX:
+    if use_flax:
         models['flax'] = FlaxT5ForConditionalGeneration.from_pretrained(model_name,
                                                                         dtype=getattr(jnp, "float32"),
                                                                         seed=42)
-    if PT:
+    if use_pt:
         models['pt'] = T5ForConditionalGeneration.from_pretrained(model_name, from_flax=True).to('cpu')
     return tokenizer, models
 
 
-def generate_model_outputs(models, tokenizer, input_texts):
+def generate_model_outputs(models, tokenizer, input_texts, use_flax=FLAX, use_pt=PT):
     results = {'flax': "", 'pt': ""}
 
-    if FLAX:
+    if use_flax:
         inputs = tokenizer(input_texts,
                            padding="max_length",
                            max_length=512,
@@ -47,7 +47,7 @@ def generate_model_outputs(models, tokenizer, input_texts):
         ).sequences
         results['flax'] = tokenizer.batch_decode(output_sequences, skip_special_tokens=True,
                                                  clean_up_tokenization_spaces=False)
-    if PT:
+    if use_pt:
         inputs = tokenizer(input_texts,
                            max_length=512,
                            padding="max_length",
@@ -66,15 +66,15 @@ def generate_model_outputs(models, tokenizer, input_texts):
     return results
 
 
-def generate_model_outputs_dataset(models, tokenizer, pglue_task="opp_115"):
+def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json', pglue_task="opp_115", batch_size=16):
     dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
 
     DATASET = 'test'
+
     inputs = [dataset_dict[DATASET][i]['text'] for i in range(len(dataset_dict[DATASET]))]
     print("Generating model outputs for {} examples".format(len(inputs)))
 
     # Split inputs into batches of a specified size (e.g., batch_size)
-    batch_size = 32  # You can adjust this as needed
     all_outputs = {'flax': [], 'pt': []}
     for i in tqdm(range(0, len(inputs), batch_size)):
         batch_inputs = inputs[i:i + batch_size]
@@ -83,27 +83,16 @@ def generate_model_outputs_dataset(models, tokenizer, pglue_task="opp_115"):
             all_outputs['flax'] += outputs['flax']
         if outputs['pt']:
             all_outputs['pt'] += outputs['pt']
-        # Save or process the batch outputs here
 
-        # Print the batch results
-        # for j, input_text in enumerate(batch_inputs):
-        #     print("-" * 20 + "Batch: {} | Example: {} ".format(i // batch_size, j) + "-" * 20)
-        #     print("Input: ", input_text)
-            # print("flax: ", outputs['flax'][j])
-            # print("pt: ", outputs['pt'][j])
-    results_path = Path(model_name).parent / "results.json"
-    with open(results_path, 'w', encoding="utf-8") as f:
-        json.dump(all_outputs, f, ensure_ascii=False, indent=4)
-
-    print()
+        with open(outputs_path, 'w', encoding="utf-8") as f:
+            json.dump(all_outputs, f, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':
 
-    model_name = "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/2023-09-03" \
-                 "/opp_115/best_model/"
+    model_name = "alzoubi36/pglue_opp_115_priva_t5-base"
 
-    tokenizer, models = initialize_model(model_name)
+    tokenizer, models = initialize_model(model_name, "t5-base")
 
     start = time.time()
     generate_model_outputs_dataset(models, tokenizer)

@@ -10,3 +10,8 @@ tensorflow
 sentencepiece
 seaborn
 torch
+pyyaml
+pydantic
+sklearn
+seqeval
+tabulate

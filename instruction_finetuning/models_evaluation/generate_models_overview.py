@@ -37,7 +37,7 @@ def get_task_name(model_name):
     return ""
 
 
-def get_model_name(model_name):
+def get_base_model_name(model_name):
     names = ['_priva_t5-v1.1', '_priva_t5', '_t5-v1.1', '_t5']
     for name in names:
         match = re.search(rf'{name}', model_name)
@@ -60,7 +60,7 @@ def create_tables(model_names):
             name = name.split('/')[-1]
             if size in name:
                 task = get_task_name(name)
-                model = get_model_name(name)
+                model = get_base_model_name(name)
                 if not task:
                     continue
 
