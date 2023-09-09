@@ -76,8 +76,6 @@ class T5EvaluationPipeline:
         return tokenizer_name
 
     def run(self):
-        # Free space for new models
-        self.remove_huggingface_cache()
 
         available_models = list_models(huggingface_search_params)
         model_names = [model['modelId'] for model in available_models]
@@ -85,13 +83,20 @@ class T5EvaluationPipeline:
         print(f"Found {len(model_names)} models...")
         for model_name in model_names:
             print(f"Running inference on model {model_name}...")
+
+            # Free space for new models
+            self.remove_huggingface_cache()
+
             tokenizer_name = self.get_tokenizer_name(model_name)
             try:
-                tokenizer, model = initialize_model(model_name, tokenizer_name=tokenizer_name)
                 model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_name)
+                model_outputs_json = model_outputs_dir / 'outputs.json'
+                if model_outputs_json.exists():
+                    print(f"Model {model_name} already evaluated. Skipping...")
+                    continue
+                tokenizer, model = initialize_model(model_name, tokenizer_name=tokenizer_name)
                 model_outputs_dir.mkdir(parents=True, exist_ok=True)
 
-                model_outputs_json = model_outputs_dir / 'outputs.json'
                 generate_model_outputs_dataset(model,
                                                tokenizer,
                                                model_outputs_json,
@@ -103,8 +108,6 @@ class T5EvaluationPipeline:
                 with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
                     json.dump(self.results, f, ensure_ascii=False, indent=4)
 
-                # Free space for new models
-                self.remove_huggingface_cache()
             except Exception as e:
                 print(f"Error running inference on model {model_name}: {e}")
                 print(f"Batch size: {self.get_batch_size(model_name)}")
