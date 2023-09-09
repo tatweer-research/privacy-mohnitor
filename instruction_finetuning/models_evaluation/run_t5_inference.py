@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 import numpy as np
-from jax_smi import initialise_tracking
+# from jax_smi import initialise_tracking
 import jax
 import jax.numpy as jnp
 from flax.training.common_utils import shard
@@ -47,7 +47,7 @@ def generate_model_outputs(models, inputs, use_flax=FLAX, use_pt=PT):
     #         max_length=512,
     #     )
     #     return output_sequences.sequences
-    
+
     if use_flax:
         jit_generate = jax.jit(models['flax'].generate, static_argnames=["max_length", "do_sample"])
         output_sequences = jit_generate(input_ids=inputs["input_ids"], max_length=512, do_sample=False).sequences
@@ -70,7 +70,8 @@ def generate_model_outputs(models, inputs, use_flax=FLAX, use_pt=PT):
     return results
 
 
-def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json', pglue_task="policy_ie_b", batch_size=None):
+def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json', pglue_task="policy_ie_b",
+                                   batch_size=None):
     if not batch_size:
         batch_size = jax.device_count() * 32
     dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
@@ -87,20 +88,20 @@ def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json
     all_outputs = {'flax': [], 'pt': []}
     if use_flax:
         inputs = tokenizer(inputs,
-                        padding="max_length",
-                        max_length=512,
-                        truncation=True,
-                        return_attention_mask=False,
-                        return_tensors="np"
-                        )
+                           padding="max_length",
+                           max_length=512,
+                           truncation=True,
+                           return_attention_mask=False,
+                           return_tensors="np"
+                           )
     elif use_pt:
         inputs = tokenizer(inputs,
-                    max_length=512,
-                    padding="max_length",
-                    truncation=True,
-                    return_attention_mask=False,
-                    return_tensors="pt"
-                    )
+                           max_length=512,
+                           padding="max_length",
+                           truncation=True,
+                           return_attention_mask=False,
+                           return_tensors="pt"
+                           )
     else:
         exit(1)
     for i in tqdm(range(0, number_inputs, batch_size), desc='Progress:'):
@@ -116,7 +117,6 @@ def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json
 
 
 if __name__ == '__main__':
-
     model_name = "alzoubi36/pglue_opp_115_priva_t5-small"
 
     tokenizer, models = initialize_model(model_name, "t5-small")
