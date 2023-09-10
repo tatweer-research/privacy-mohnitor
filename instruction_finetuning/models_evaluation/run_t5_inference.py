@@ -36,7 +36,7 @@ def initialize_model(model_name, tokenizer_name, use_flax=FLAX, use_pt=PT):
     return tokenizer, models
 
 
-def generate_model_outputs(models, inputs, use_flax=FLAX, use_pt=PT):
+def generate_model_outputs(models, inputs, tokenizer, use_flax=FLAX, use_pt=PT):
     results = {'flax': "", 'pt': ""}
 
     # def generate_step(input_ids):
@@ -106,7 +106,7 @@ def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json
         exit(1)
     for i in tqdm(range(0, number_inputs, batch_size), desc='Progress:'):
         batch_inputs = {k: v[i:i + batch_size] for k, v in inputs.items()}
-        outputs = generate_model_outputs(models, batch_inputs)
+        outputs = generate_model_outputs(models, batch_inputs, tokenizer)
         if outputs['flax']:
             all_outputs['flax'] += outputs['flax']
         if outputs['pt']:
