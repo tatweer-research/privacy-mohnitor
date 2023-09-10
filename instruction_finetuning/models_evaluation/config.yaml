@@ -7,3 +7,6 @@ general:
         base: 16
         large: 8
         3b: 4
+    requested_sizes:
+        - small
+        - base

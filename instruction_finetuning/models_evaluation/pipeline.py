@@ -20,6 +20,7 @@ class GeneralConfig(BaseModel):
     path_to_results_json: str
     path_to_model_outputs: str
     batch_sizes: dict
+    requested_sizes: list
 
 
 class AppConfig(BaseModel):
@@ -75,11 +76,16 @@ class T5EvaluationPipeline:
             tokenizer_name = 'google' + '/' + tokenizer_name.replace('.', '_')
         return tokenizer_name
 
-    def run(self):
+    def filter_models(self, model_names):
+        model_names = list(filter(self.pglue_model, model_names))
+        model_names = list(filter(lambda x: x.split('-')[-1] in self.general_config.requested_sizes, model_names))
+        return model_names
 
+    def run(self):
         available_models = list_models(huggingface_search_params)
         model_names = [model['modelId'] for model in available_models]
-        model_names = list(filter(self.pglue_model, model_names))
+        model_names = self.filter_models(model_names)
+
         print(f"Found {len(model_names)} models...")
         for model_name in model_names:
             print(f"Running inference on model {model_name}...")
@@ -88,6 +94,8 @@ class T5EvaluationPipeline:
             self.remove_huggingface_cache()
             tokenizer_name = self.get_tokenizer_name(model_name)
             max_generation_length = 5 if get_task_name(model_name) == 'privacy_qa' else 512
+            print(f"Limiting generation length on model {model_name} to {max_generation_length} tokens...")
+
             try:
                 model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_name)
                 model_outputs_json = model_outputs_dir / 'outputs.json'
