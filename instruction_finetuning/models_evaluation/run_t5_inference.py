@@ -28,7 +28,7 @@ def initialize_model(model_name, tokenizer_name, use_flax=FLAX, use_pt=PT):
     return tokenizer, models
 
 
-def generate_model_outputs(models, tokenizer, input_texts, use_flax=FLAX, use_pt=PT):
+def generate_model_outputs(models, tokenizer, input_texts, use_flax=FLAX, use_pt=PT, max_generation_length=512):
     results = {'flax': "", 'pt': ""}
 
     if use_flax:
@@ -43,7 +43,7 @@ def generate_model_outputs(models, tokenizer, input_texts, use_flax=FLAX, use_pt
             input_ids=inputs["input_ids"],
             # attention_mask=inputs["attention_mask"],
             do_sample=False,  # disable sampling to test if batching affects output
-            max_length=512,
+            max_length=max_generation_length,
         ).sequences
         results['flax'] = tokenizer.batch_decode(output_sequences, skip_special_tokens=True,
                                                  clean_up_tokenization_spaces=False)
@@ -59,14 +59,19 @@ def generate_model_outputs(models, tokenizer, input_texts, use_flax=FLAX, use_pt
             input_ids=inputs["input_ids"],
             # attention_mask=inputs["attention_mask"],
             do_sample=False,  # disable sampling to test if batching affects output
-            max_length=512,
+            max_length=max_generation_length,
         )
 
         results['pt'] = tokenizer.batch_decode(output_sequences, skip_special_tokens=True)
     return results
 
 
-def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json', pglue_task="opp_115", batch_size=16):
+def generate_model_outputs_dataset(models,
+                                   tokenizer,
+                                   outputs_path='outputs.json',
+                                   pglue_task="privacy_qa",
+                                   batch_size=16,
+                                   max_generation_length=512):
     dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
 
     DATASET = 'test'
@@ -78,7 +83,7 @@ def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json
     all_outputs = {'flax': [], 'pt': []}
     for i in tqdm(range(0, len(inputs), batch_size)):
         batch_inputs = inputs[i:i + batch_size]
-        outputs = generate_model_outputs(models, tokenizer, batch_inputs)
+        outputs = generate_model_outputs(models, tokenizer, batch_inputs, max_generation_length=max_generation_length)
         if outputs['flax']:
             all_outputs['flax'] += outputs['flax']
         if outputs['pt']:
@@ -90,12 +95,12 @@ def generate_model_outputs_dataset(models, tokenizer, outputs_path='outputs.json
 
 if __name__ == '__main__':
 
-    model_name = "alzoubi36/pglue_opp_115_priva_t5-base"
+    model_name = "alzoubi36/pglue_privacy_qa_priva_t5-small"
 
-    tokenizer, models = initialize_model(model_name, "t5-base")
+    tokenizer, models = initialize_model(model_name, "t5-small")
 
     start = time.time()
-    generate_model_outputs_dataset(models, tokenizer)
+    generate_model_outputs_dataset(models, tokenizer, max_generation_length=5)
     end = time.time()
 
     print("Generation time: ", end - start)
