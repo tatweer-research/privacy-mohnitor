@@ -34,7 +34,8 @@ def generate_model_outputs_parallel(models, tokenizer, inputs, use_flax=FLAX, us
 
     if use_flax:
         jit_generate = jax.jit(models['flax'].generate, static_argnames=["max_length", "do_sample"])
-        output_sequences = jit_generate(input_ids=inputs["input_ids"], max_length=max_generation_length, do_sample=False).sequences
+        output_sequences = jit_generate(input_ids=inputs["input_ids"], max_length=max_generation_length,
+                                        do_sample=False).sequences
 
         results['flax'] = tokenizer.batch_decode(output_sequences, skip_special_tokens=True,
                                                  clean_up_tokenization_spaces=False)
@@ -47,6 +48,56 @@ def generate_model_outputs_parallel(models, tokenizer, inputs, use_flax=FLAX, us
 
         results['pt'] = tokenizer.batch_decode(output_sequences, skip_special_tokens=True)
     return results
+
+
+def generate_model_outputs_dataset_parallel(models,
+                                            tokenizer,
+                                            outputs_path='outputs.json',
+                                            pglue_task="privacy_qa",
+                                            batch_size=16,
+                                            max_generation_length=512):
+    if not batch_size:
+        batch_size = jax.device_count() * 32
+    dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
+
+    DATASET = 'test'
+    use_flax = FLAX
+    use_pt = PT
+
+    inputs = [dataset_dict[DATASET][i]['text'] for i in range(len(dataset_dict[DATASET]))]
+    number_inputs = len(inputs)
+    print("Generating model outputs for {} examples".format(len(inputs)))
+
+    # Split inputs into batches of a specified size (e.g., batch_size)
+    all_outputs = {'flax': [], 'pt': []}
+    if use_flax:
+        inputs = tokenizer(inputs,
+                           padding="max_length",
+                           max_length=512,
+                           truncation=True,
+                           return_attention_mask=False,
+                           return_tensors="np"
+                           )
+    elif use_pt:
+        inputs = tokenizer(inputs,
+                           max_length=512,
+                           padding="max_length",
+                           truncation=True,
+                           return_attention_mask=False,
+                           return_tensors="pt"
+                           )
+    else:
+        exit(1)
+    for i in tqdm(range(0, number_inputs, batch_size), desc='Progress:'):
+        batch_inputs = {k: v[i:i + batch_size] for k, v in inputs.items()}
+        outputs = generate_model_outputs_parallel(models, tokenizer, batch_inputs, max_generation_length)
+        if outputs['flax']:
+            all_outputs['flax'] += outputs['flax']
+        if outputs['pt']:
+            all_outputs['pt'] += outputs['pt']
+
+        with open(outputs_path, 'w', encoding="utf-8") as f:
+            json.dump(all_outputs, f, ensure_ascii=False, indent=4)
 
 
 def generate_model_outputs(models, tokenizer, input_texts, use_flax=FLAX, use_pt=PT, max_generation_length=512):
@@ -102,7 +153,8 @@ def generate_model_outputs_dataset(models,
     all_outputs = {'flax': [], 'pt': []}
     for i in tqdm(range(0, len(inputs), batch_size)):
         batch_inputs = inputs[i:i + batch_size]
-        outputs = generate_model_outputs_parallel(models, tokenizer, batch_inputs, max_generation_length=max_generation_length)
+        outputs = generate_model_outputs(models, tokenizer, batch_inputs,
+                                         max_generation_length=max_generation_length)
         if outputs['flax']:
             all_outputs['flax'] += outputs['flax']
         if outputs['pt']:
@@ -118,7 +170,7 @@ if __name__ == '__main__':
     tokenizer, models = initialize_model(model_name, "t5-small")
 
     start = time.time()
-    generate_model_outputs_dataset(models, tokenizer, max_generation_length=512)
+    generate_model_outputs_dataset(models, tokenizer, max_generation_length=5)
     end = time.time()
 
     print("Generation time: ", end - start)

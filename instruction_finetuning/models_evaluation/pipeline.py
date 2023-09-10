@@ -86,8 +86,8 @@ class T5EvaluationPipeline:
 
             # Free space for new models
             self.remove_huggingface_cache()
-
             tokenizer_name = self.get_tokenizer_name(model_name)
+            max_generation_length = 5 if get_task_name(model_name) == 'privacy_qa' else 512
             try:
                 model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_name)
                 model_outputs_json = model_outputs_dir / 'outputs.json'
@@ -101,7 +101,8 @@ class T5EvaluationPipeline:
                                                tokenizer,
                                                model_outputs_json,
                                                pglue_task=get_task_name(model_name),
-                                               batch_size=self.get_batch_size(model_name))
+                                               batch_size=self.get_batch_size(model_name),
+                                               max_generation_length=max_generation_length)
                 task = get_task_name(model_name)
                 evaluation_result = TAKS_EVALUATION_FUNCTIONS[task](model_outputs_json)
                 self.results[model_name] = evaluation_result
