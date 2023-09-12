@@ -164,13 +164,33 @@ def generate_model_outputs_dataset(models,
             json.dump(all_outputs, f, ensure_ascii=False, indent=4)
 
 
-if __name__ == '__main__':
-    model_name = "alzoubi36/pglue_privacy_qa_priva_t5-small"
-
-    tokenizer, models = initialize_model(model_name, "t5-small")
+def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
+                          tokenizer_name="t5-small",
+                          pglue_task="piextract",
+                          output_json="outputs.json"):
+    tokenizer, models = initialize_model(model_name, tokenizer_name)
 
     start = time.time()
-    generate_model_outputs_dataset(models, tokenizer, max_generation_length=5)
+    generate_model_outputs_dataset(models,
+                                   tokenizer,
+                                   max_generation_length=512,
+                                   pglue_task=pglue_task,
+                                   outputs_path=output_json)
+    end = time.time()
+    print("Generation time: ", end - start)
+    from instruction_finetuning.models_evaluation.calculate_f1 import TAKS_EVALUATION_FUNCTIONS
+    evaluation_result = TAKS_EVALUATION_FUNCTIONS[pglue_task](output_json)
+    print("Evaluation result: ", evaluation_result)
+    return evaluation_result
+
+
+if __name__ == '__main__':
+    model_name = "alzoubi36/pglue_piextract_priva_t5-base"
+
+    tokenizer, models = initialize_model(model_name, "t5-base")
+
+    start = time.time()
+    generate_model_outputs_dataset(models, tokenizer, max_generation_length=512, pglue_task="piextract")
     end = time.time()
 
     print("Generation time: ", end - start)

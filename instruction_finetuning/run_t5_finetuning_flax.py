@@ -456,6 +456,7 @@ class T5Finetuner:
         dropout_rngs = jax.random.split(rng, jax.local_device_count())
 
         best_model = None
+        # best_eval_metric = 10 ** 10
         best_eval_metric = 0.0
 
         # Store some constant
@@ -541,7 +542,7 @@ class T5Finetuner:
         for epoch in epochs:
             # ======================== Training ================================
 
-            if no_improvement_count >= 40:
+            if no_improvement_count >= 100:
                 break
 
             train_start = time.time()
@@ -631,7 +632,9 @@ class T5Finetuner:
 
                     eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
-                    if eval_metrics['accuracy'] > best_eval_metric:
+                    # if float(eval_metrics['loss']) < float(best_eval_metric):
+                    #     best_eval_metric = eval_metrics['loss']
+                    if float(eval_metrics['accuracy']) > float(best_eval_metric):
                         best_eval_metric = eval_metrics['accuracy']
                         self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'best_model'))
                         self.logger.info(f"Saving best model...")
@@ -974,41 +977,63 @@ class T5Finetuner:
         self.logger.info(f'======================= Finetuning {self.model_args.model_name_or_path} on the following '
                          f'tasks: =======================')
         self.logger.info(f'{tasks}')
-
+        ############### TODO: change
+        self.results = {}
         for task in tasks:
             if task not in PRIVACY_GLUE_TASKS:
                 raise ValueError(f"Task \"{task}\" not found in PrivacyGLUE benchmark. "
                                  f"Task must be one of {PRIVACY_GLUE_TASKS}")
+            ############ TODO: change
+            task_results = []
+            for i in range(20):
+                # Create a task directory
+                self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
+                Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
 
-            # Create a task directory
-            self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
-            Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
+                self.datasets = self.load_privacy_glue_dataset(task=task)
+                self.tokenizer = self.load_tokenizer()
+                self.config = self.load_model_config()
 
-            self.datasets = self.load_privacy_glue_dataset(task=task)
-            self.tokenizer = self.load_tokenizer()
-            self.config = self.load_model_config()
+                # Tokenize our datasets.
+                self.tokenized_datasets = self.tokenize_datasets()
 
-            # Tokenize our datasets.
-            self.tokenized_datasets = self.tokenize_datasets()
+                self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
+                self.model = self.load_model()
+                self.linear_decay_lr_schedule_fn = None
 
-            self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
-            self.model = self.load_model()
-            self.linear_decay_lr_schedule_fn = None
+                self.logger.info(f'======================= Finetuning on task {task}_{i}... =======================')
 
-            self.logger.info(f'======================= Finetuning on task {task}... =======================')
+                self.finetune(task=task)
 
-            self.finetune(task=task)
+                if self.model_args.hub_save_name_or_path:
+                    # Free memory
+                    self.model = None
+                    try:
+                        push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
+                                          f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
-            if self.model_args.hub_save_name_or_path:
-                # Free memory
-                self.model = None
-                try:
-                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
-                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
-                except Exception as e:
-                    self.logger.info(f'Error pushing best model to hub: {e}')
-                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'latest_model'),
-                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
+                        ###############
+                        from instruction_finetuning.models_evaluation.run_t5_inference import generate_and_evaluate
+                        import time
+
+                        time.sleep(10)
+                        best_model = os.path.join(self.training_args.output_dir, 'best_model')
+                        evaluation_result = generate_and_evaluate(model_name=best_model,
+                                                                  tokenizer_name=best_model,
+                                                                  pglue_task=task,
+                                                                  output_json=f"piextract/{task}_{i}.json")
+                        task_results += [evaluation_result]
+                        self.results[f'pglue_{task}_{i}_{self.model_args.hub_save_name_or_path}'] = evaluation_result
+                        self.results[f'best_{task}'] = max(task_results)
+                        self.logger.info(self.results)
+                        with open("piextract/training_results.json", 'w', encoding="utf-8") as f:
+                            json.dump(self.results, f, ensure_ascii=False, indent=4)
+                        ###############
+
+                    except Exception as e:
+                        self.logger.info(f'Error pushing best model to hub: {e}')
+                        push_model_to_hub(os.path.join(self.training_args.output_dir, 'latest_model'),
+                                          f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
 
 if __name__ == "__main__":

@@ -239,3 +239,6 @@ TAKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
                              "policy_ie_b": evaluate_policy_ie_b,
                              "policy_qa": evaluate_policy_qa,
                              "privacy_qa": evaluate_privacy_qa}
+
+if __name__ == '__main__':
+    print(evaluate_piextract('outputs.json'))
