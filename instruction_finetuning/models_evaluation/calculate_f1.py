@@ -22,10 +22,10 @@ from instruction_finetuning.data_preprocessing.policy_ie_b import SUBTASKS as po
 from instruction_finetuning.data_preprocessing.policy_ie_b import LABELS as policy_ie_b_labels
 
 
-def evaluate_policy_detection(model_outputs_path):
+def evaluate_policy_detection(model_outputs_path, split='test'):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/policy_detection')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     # Evaluation results
     with open(model_outputs_path,
@@ -41,10 +41,10 @@ def evaluate_policy_detection(model_outputs_path):
     return f1_score_result
 
 
-def evaluate_policy_ie_a(model_outputs_path):
+def evaluate_policy_ie_a(model_outputs_path, split='test'):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/policy_ie_a')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     # Evaluation results
     with open(model_outputs_path,
@@ -64,10 +64,10 @@ def evaluate_policy_ie_a(model_outputs_path):
     return f1_score_result
 
 
-def evaluate_opp_115(model_outputs_path):
+def evaluate_opp_115(model_outputs_path, split='test'):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/opp_115')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     # Evaluation results
     with open(model_outputs_path,
@@ -92,10 +92,10 @@ def evaluate_opp_115(model_outputs_path):
     return f1_score_result
 
 
-def evaluate_privacy_qa(model_outputs_path):
+def evaluate_privacy_qa(model_outputs_path, split='test'):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/privacy_qa')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     # Evaluation results
     with open(model_outputs_path,
@@ -111,10 +111,10 @@ def evaluate_privacy_qa(model_outputs_path):
     return f1_score_result
 
 
-def evaluate_piextract(model_outputs_path):
+def evaluate_piextract(model_outputs_path, split='test'):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/piextract')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     def postprocess(y_true, y_pred):
         for i, (true, pred) in enumerate(zip(y_true, y_pred)):
@@ -144,10 +144,10 @@ def evaluate_piextract(model_outputs_path):
     return sum(f1_scores) / len(f1_scores)
 
 
-def evaluate_policy_ie_b(model_outputs_path):
+def evaluate_policy_ie_b(model_outputs_path, split='test'):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/policy_ie_b')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     def postprocess(y_true, y_pred):
         for i, (true, pred) in enumerate(zip(y_true, y_pred)):
@@ -205,7 +205,7 @@ def levenshtein_distance(str1, str2):
     return matrix[rows - 1][cols - 1]
 
 
-def evaluate_policy_qa(model_outputs_path):
+def evaluate_policy_qa(model_outputs_path, split='test'):
     def accuracy(y_true, y_pred):
         levenshtein_distances = []
         for str1, str2 in zip(y_true, y_pred):
@@ -220,7 +220,7 @@ def evaluate_policy_qa(model_outputs_path):
         return np.sum(binary_array) / len(binary_array)
 
     dataset_dict = load_dataset('alzoubi36/policy_qa')
-    dataset = dataset_dict['test']
+    dataset = dataset_dict[split]
 
     # Evaluation results
     with open(model_outputs_path,
