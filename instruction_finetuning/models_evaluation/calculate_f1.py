@@ -34,9 +34,9 @@ def evaluate_policy_detection(model_outputs_path, split='test'):
 
     y_true = [example['label'] for example in dataset]
     y_pred = [1 if example == 'policy' else 0 for example in results['flax']]
-    target_names = ['not_policy', 'policy']
-    result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
-    result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
+    # target_names = ['not_policy', 'policy']
+    # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
+    # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
     f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(2)))
     return f1_score_result
 
@@ -57,9 +57,9 @@ def evaluate_policy_ie_a(model_outputs_path, split='test'):
     for i in y_pred:
         combined_y_pred.extend(i)
     y_pred = combined_y_pred
-    target_names = policy_ie_a_labels
-    result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
-    result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=[0, 1, 2, 3, 4])
+    # target_names = policy_ie_a_labels
+    # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
+    # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=[0, 1, 2, 3, 4])
     f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(4)))
     return f1_score_result
 
@@ -85,9 +85,9 @@ def evaluate_opp_115(model_outputs_path, split='test'):
     y_true = MultiLabelBinarizer().fit_transform(y_true)
     y_pred = MultiLabelBinarizer().fit_transform(y_pred)
 
-    target_names = opp_115_labels
-    result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
-    result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=list(range(12)))
+    # target_names = opp_115_labels
+    # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
+    # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=list(range(12)))
     f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(12)))
     return f1_score_result
 
@@ -104,9 +104,9 @@ def evaluate_privacy_qa(model_outputs_path, split='test'):
 
     y_true = [example['label'] for example in dataset]
     y_pred = [privacy_qa_from_text(example) for example in results['flax']]
-    target_names = privacy_qa_labels
-    result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
-    result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
+    # target_names = privacy_qa_labels
+    # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
+    # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
     f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(len(target_names))))
     return f1_score_result
 

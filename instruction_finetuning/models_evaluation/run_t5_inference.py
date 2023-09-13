@@ -141,10 +141,11 @@ def generate_model_outputs_dataset(models,
                                    outputs_path='outputs.json',
                                    pglue_task="privacy_qa",
                                    batch_size=16,
-                                   max_generation_length=512):
+                                   max_generation_length=512,
+                                   split='test'):
     dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
 
-    DATASET = 'test'
+    DATASET = split
 
     inputs = [dataset_dict[DATASET][i]['text'] for i in range(len(dataset_dict[DATASET]))]
     print("Generating model outputs for {} examples".format(len(inputs)))
@@ -167,19 +168,27 @@ def generate_model_outputs_dataset(models,
 def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
                           tokenizer_name="t5-small",
                           pglue_task="piextract",
-                          output_json="outputs.json"):
-    tokenizer, models = initialize_model(model_name, tokenizer_name)
+                          output_json="outputs.json",
+                          max_generation_length=512,
+                          model=None,
+                          tokenizer=None,
+                          split="test"):
+    if not model and not tokenizer:
+        tokenizer, models = initialize_model(model_name, tokenizer_name)
+    else:
+        models = {"flax": model, "pt": ""}
 
     start = time.time()
     generate_model_outputs_dataset(models,
                                    tokenizer,
-                                   max_generation_length=512,
+                                   max_generation_length=max_generation_length,
                                    pglue_task=pglue_task,
-                                   outputs_path=output_json)
+                                   outputs_path=output_json,
+                                   split=split)
     end = time.time()
     print("Generation time: ", end - start)
     from instruction_finetuning.models_evaluation.calculate_f1 import TAKS_EVALUATION_FUNCTIONS
-    evaluation_result = TAKS_EVALUATION_FUNCTIONS[pglue_task](output_json)
+    evaluation_result = TAKS_EVALUATION_FUNCTIONS[pglue_task](output_json, split=split)
     print("Evaluation result: ", evaluation_result)
     return evaluation_result
 

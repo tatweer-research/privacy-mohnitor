@@ -64,6 +64,8 @@ from transformers.utils import get_full_repo_name, send_example_telemetry
 
 from instruction_finetuning.data_preprocessing import text2text_functions
 from instruction_finetuning.data_preprocessing import TASKS as PRIVACY_GLUE_TASKS
+from instruction_finetuning.models_evaluation.run_t5_inference import generate_and_evaluate
+
 from utils import create_pdf_from_tensorboard, get_current_date, push_model_to_hub
 
 MODEL_CONFIG_CLASSES = list(FLAX_MODEL_FOR_MASKED_LM_MAPPING.keys())
@@ -632,16 +634,6 @@ class T5Finetuner:
 
                     eval_metrics = jax.tree_util.tree_map(jnp.mean, eval_metrics)
 
-                    # if float(eval_metrics['loss']) < float(best_eval_metric):
-                    #     best_eval_metric = eval_metrics['loss']
-                    if float(eval_metrics['accuracy']) > float(best_eval_metric):
-                        best_eval_metric = eval_metrics['accuracy']
-                        self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'best_model'))
-                        self.logger.info(f"Saving best model...")
-                        no_improvement_count = 0
-                    else:
-                        no_improvement_count += 1
-
                     # Update progress bar
                     epochs.write(
                         f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']}")
@@ -653,6 +645,28 @@ class T5Finetuner:
 
                 if cur_step % self.training_args.save_steps == 0 and cur_step > 0:
                     self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'latest_model'))
+
+                    try:
+                        # if float(eval_metrics['loss']) < float(best_eval_metric):
+                        #     best_eval_metric = eval_metrics['loss']
+                        # if float(eval_metrics['accuracy']) > float(best_eval_metric):
+                        #     best_eval_metric = eval_metrics['accuracy']
+                        model_name = os.path.join(self.training_args.output_dir, 'latest_model')
+                        eval_f1 = generate_and_evaluate(model_name=model_name,
+                                                        tokenizer_name=model_name,
+                                                        pglue_task=self.task,
+                                                        split='test',
+                                                        output_json="generate_evaluation/latest_model.json")
+                        if float(eval_f1) > float(best_eval_metric):
+                            best_eval_metric = eval_f1
+                            self.save_model(cur_step, state,
+                                            os.path.join(self.training_args.output_dir, 'best_model'))
+                            self.logger.info(f"Saving best model...")
+                            no_improvement_count = 0
+                        else:
+                            no_improvement_count += 1
+                    except Exception as e:
+                        print('Error evaluating model:\n', e)
 
         self.create_training_report()
 
@@ -985,55 +999,54 @@ class T5Finetuner:
                                  f"Task must be one of {PRIVACY_GLUE_TASKS}")
             ############ TODO: change
             task_results = []
-            for i in range(20):
-                # Create a task directory
-                self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
-                Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
+            self.task = task
+            # Create a task directory
+            self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
+            Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
 
-                self.datasets = self.load_privacy_glue_dataset(task=task)
-                self.tokenizer = self.load_tokenizer()
-                self.config = self.load_model_config()
+            self.datasets = self.load_privacy_glue_dataset(task=task)
+            self.tokenizer = self.load_tokenizer()
+            self.config = self.load_model_config()
 
-                # Tokenize our datasets.
-                self.tokenized_datasets = self.tokenize_datasets()
+            # Tokenize our datasets.
+            self.tokenized_datasets = self.tokenize_datasets()
 
-                self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
-                self.model = self.load_model()
-                self.linear_decay_lr_schedule_fn = None
+            self.has_tensorboard, self.summary_writer = self.handle_tensorboard()
+            self.model = self.load_model()
+            self.linear_decay_lr_schedule_fn = None
 
-                self.logger.info(f'======================= Finetuning on task {task}_{i}... =======================')
+            self.logger.info(f'======================= Finetuning on task {task}... =======================')
 
-                self.finetune(task=task)
+            self.finetune(task=task)
 
-                if self.model_args.hub_save_name_or_path:
-                    # Free memory
-                    self.model = None
-                    try:
-                        push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
-                                          f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
+            if self.model_args.hub_save_name_or_path:
+                # Free memory
+                self.model = None
+                try:
+                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
+                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
-                        ###############
-                        from instruction_finetuning.models_evaluation.run_t5_inference import generate_and_evaluate
-                        import time
+                    ###############
+                    import time
 
-                        time.sleep(10)
-                        best_model = os.path.join(self.training_args.output_dir, 'best_model')
-                        evaluation_result = generate_and_evaluate(model_name=best_model,
-                                                                  tokenizer_name=best_model,
-                                                                  pglue_task=task,
-                                                                  output_json=f"piextract/{task}_{i}.json")
-                        task_results += [evaluation_result]
-                        self.results[f'pglue_{task}_{i}_{self.model_args.hub_save_name_or_path}'] = evaluation_result
-                        self.results[f'best_{task}'] = max(task_results)
-                        self.logger.info(self.results)
-                        with open("piextract/training_results.json", 'w', encoding="utf-8") as f:
-                            json.dump(self.results, f, ensure_ascii=False, indent=4)
-                        ###############
+                    time.sleep(10)
+                    best_model = os.path.join(self.training_args.output_dir, 'best_model')
+                    evaluation_result = generate_and_evaluate(model_name=best_model,
+                                                              tokenizer_name=best_model,
+                                                              pglue_task=task,
+                                                              output_json=f"generate_evaluation/{task}.json")
+                    task_results += [evaluation_result]
+                    self.results[f'pglue_{task}_{self.model_args.hub_save_name_or_path}'] = evaluation_result
+                    self.results[f'best_{task}'] = max(task_results)
+                    self.logger.info(self.results)
+                    with open("generate_evaluation/training_results.json", 'w', encoding="utf-8") as f:
+                        json.dump(self.results, f, ensure_ascii=False, indent=4)
+                    ###############
 
-                    except Exception as e:
-                        self.logger.info(f'Error pushing best model to hub: {e}')
-                        push_model_to_hub(os.path.join(self.training_args.output_dir, 'latest_model'),
-                                          f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
+                except Exception as e:
+                    self.logger.info(f'Error pushing best model to hub: {e}')
+                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'latest_model'),
+                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
 
 if __name__ == "__main__":
