@@ -12,6 +12,6 @@ seaborn
 torch
 pyyaml
 pydantic
-sklearn
+scikit-learn
 seqeval
 tabulate
