@@ -653,6 +653,8 @@ class T5Finetuner:
                         #     best_eval_metric = eval_metrics['accuracy']
                         model_name = os.path.join(self.training_args.output_dir, 'latest_model')
                         eval_f1 = generate_and_evaluate(model_name=model_name,
+                                                        batch_size=self.training_args.per_device_eval_batch_size,
+                                                        examples_limit=1100,
                                                         tokenizer_name=model_name,
                                                         pglue_task=self.task,
                                                         split='test',

@@ -22,7 +22,7 @@ from instruction_finetuning.data_preprocessing.policy_ie_b import SUBTASKS as po
 from instruction_finetuning.data_preprocessing.policy_ie_b import LABELS as policy_ie_b_labels
 
 
-def evaluate_policy_detection(model_outputs_path, split='test'):
+def evaluate_policy_detection(model_outputs_path, split='test', examples_limit=None):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/policy_detection')
     dataset = dataset_dict[split]
@@ -32,7 +32,7 @@ def evaluate_policy_detection(model_outputs_path, split='test'):
               'r', encoding='utf-8') as f:
         results = json.load(f)
 
-    y_true = [example['label'] for example in dataset]
+    y_true = [example['label'] for example in dataset][:examples_limit]
     y_pred = [1 if example == 'policy' else 0 for example in results['flax']]
     # target_names = ['not_policy', 'policy']
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
@@ -41,7 +41,7 @@ def evaluate_policy_detection(model_outputs_path, split='test'):
     return f1_score_result
 
 
-def evaluate_policy_ie_a(model_outputs_path, split='test'):
+def evaluate_policy_ie_a(model_outputs_path, split='test', examples_limit=None):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/policy_ie_a')
     dataset = dataset_dict[split]
@@ -51,20 +51,16 @@ def evaluate_policy_ie_a(model_outputs_path, split='test'):
               'r', encoding='utf-8') as f:
         results = json.load(f)
 
-    y_true = [example['label'] for example in dataset]
+    y_true = [example['label'] for example in dataset][:examples_limit]
     y_pred = [policy_ie_a_from_text(example) for example in results['flax']]
-    combined_y_pred = []
-    for i in y_pred:
-        combined_y_pred.extend(i)
-    y_pred = combined_y_pred
-    # target_names = policy_ie_a_labels
+    target_names = policy_ie_a_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=[0, 1, 2, 3, 4])
-    f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(4)))
+    f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(len(target_names))))
     return f1_score_result
 
 
-def evaluate_opp_115(model_outputs_path, split='test'):
+def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/opp_115')
     dataset = dataset_dict[split]
@@ -74,7 +70,7 @@ def evaluate_opp_115(model_outputs_path, split='test'):
               'r', encoding='utf-8') as f:
         results = json.load(f)
 
-    y_true = [example['label'] for example in dataset]
+    y_true = [example['label'] for example in dataset][:examples_limit]
     y_pred = [opp_115_from_text(example) for example in results['flax']]
 
     # TODO: find a better way to handle empty predictions or labels with zero predictions
@@ -82,6 +78,10 @@ def evaluate_opp_115(model_outputs_path, split='test'):
         if not y_pred[i]:
             y_pred[i] = [7]
         break
+    if len(np.unique(y_pred)) == 1:
+        a = [0 for i in range(len(opp_115_labels))]
+        a[np.unique(y_pred)[0]] = 1
+        y_pred = np.asarray([a for i in results['flax']])
     y_true = MultiLabelBinarizer().fit_transform(y_true)
     y_pred = MultiLabelBinarizer().fit_transform(y_pred)
 
@@ -92,7 +92,7 @@ def evaluate_opp_115(model_outputs_path, split='test'):
     return f1_score_result
 
 
-def evaluate_privacy_qa(model_outputs_path, split='test'):
+def evaluate_privacy_qa(model_outputs_path, split='test', examples_limit=None):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/privacy_qa')
     dataset = dataset_dict[split]
@@ -102,16 +102,16 @@ def evaluate_privacy_qa(model_outputs_path, split='test'):
               'r', encoding='utf-8') as f:
         results = json.load(f)
 
-    y_true = [example['label'] for example in dataset]
+    y_true = [example['label'] for example in dataset][:examples_limit]
     y_pred = [privacy_qa_from_text(example) for example in results['flax']]
-    # target_names = privacy_qa_labels
+    target_names = privacy_qa_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
     f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(len(target_names))))
     return f1_score_result
 
 
-def evaluate_piextract(model_outputs_path, split='test'):
+def evaluate_piextract(model_outputs_path, split='test', examples_limit=None):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/piextract')
     dataset = dataset_dict[split]
@@ -135,7 +135,7 @@ def evaluate_piextract(model_outputs_path, split='test'):
         results = json.load(f)
     f1_scores = []
     for subtask in piextract_subtasks:
-        y_true = [example[subtask]['tags'] for example in dataset]
+        y_true = [example[subtask]['tags'] for example in dataset][:examples_limit]
         y_pred = [piextract_from_text(example, required_subtask=subtask) for example in results['flax']]
         y_true, y_pred = postprocess(y_true, y_pred)
         _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='micro')
@@ -144,7 +144,7 @@ def evaluate_piextract(model_outputs_path, split='test'):
     return sum(f1_scores) / len(f1_scores)
 
 
-def evaluate_policy_ie_b(model_outputs_path, split='test'):
+def evaluate_policy_ie_b(model_outputs_path, split='test', examples_limit=None):
     # Dataset
     dataset_dict = load_dataset('alzoubi36/policy_ie_b')
     dataset = dataset_dict[split]
@@ -170,7 +170,7 @@ def evaluate_policy_ie_b(model_outputs_path, split='test'):
         results = json.load(f)
     f1_scores = []
     for i, subtask in enumerate(policy_ie_b_subtasks):
-        y_true = [example[subtask]['tags'] for example in dataset]
+        y_true = [example[subtask]['tags'] for example in dataset][:examples_limit]
         y_pred = [policy_ie_b_from_text(example, required_subtask=subtask) for example in results['flax']]
         y_true, y_pred = postprocess(y_true, y_pred)
         _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='micro')
@@ -205,7 +205,7 @@ def levenshtein_distance(str1, str2):
     return matrix[rows - 1][cols - 1]
 
 
-def evaluate_policy_qa(model_outputs_path, split='test'):
+def evaluate_policy_qa(model_outputs_path, split='test', examples_limit=None):
     def accuracy(y_true, y_pred):
         levenshtein_distances = []
         for str1, str2 in zip(y_true, y_pred):
@@ -216,7 +216,7 @@ def evaluate_policy_qa(model_outputs_path, split='test'):
 
         # Normalize the array
         normalized_array = (levenshtein_distances - min_value) / (max_value - min_value)
-        binary_array = np.where(normalized_array < 0.2, 1, 0)
+        binary_array = np.where(normalized_array == 0.0, 1, 0)
         return np.sum(binary_array) / len(binary_array)
 
     dataset_dict = load_dataset('alzoubi36/policy_qa')
@@ -227,9 +227,11 @@ def evaluate_policy_qa(model_outputs_path, split='test'):
               'r', encoding='utf-8') as f:
         results = json.load(f)
 
-    y_true = [example['answers']['text'] for example in dataset]
-    y_pred = [example for example in results['flax']]
-    return accuracy(y_true, y_pred)
+    y_true = np.asarray([example['answers']['text'][0] for example in dataset][:examples_limit])
+    y_pred = np.asarray([example for example in results['flax']])
+
+    # Exact match score
+    return np.sum(y_true == y_pred) / len(y_true)
 
 
 TAKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
@@ -241,4 +243,5 @@ TAKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
                              "privacy_qa": evaluate_privacy_qa}
 
 if __name__ == '__main__':
-    print(evaluate_piextract('outputs.json'))
+    path = r'/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/alzoubi36/pglue_policy_qa_t5-small/outputs.json'
+    print(evaluate_policy_qa(path, examples_limit=None))

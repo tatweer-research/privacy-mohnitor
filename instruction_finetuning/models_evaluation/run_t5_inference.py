@@ -142,12 +142,14 @@ def generate_model_outputs_dataset(models,
                                    pglue_task="privacy_qa",
                                    batch_size=16,
                                    max_generation_length=512,
-                                   split='test'):
+                                   split='test',
+                                   examples_limit=None):
     dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
 
     DATASET = split
 
-    inputs = [dataset_dict[DATASET][i]['text'] for i in range(len(dataset_dict[DATASET]))]
+    inputs = [dataset_dict[DATASET][i]['text'] for i in range(len(dataset_dict[DATASET]))][:examples_limit]
+
     print("Generating model outputs for {} examples".format(len(inputs)))
 
     # Split inputs into batches of a specified size (e.g., batch_size)
@@ -169,10 +171,12 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
                           tokenizer_name="t5-small",
                           pglue_task="piextract",
                           output_json="outputs.json",
+                          batch_size=16,
                           max_generation_length=512,
                           model=None,
                           tokenizer=None,
-                          split="test"):
+                          split="test",
+                          examples_limit=None):
     if not model and not tokenizer:
         tokenizer, models = initialize_model(model_name, tokenizer_name)
     else:
@@ -181,25 +185,28 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
     start = time.time()
     generate_model_outputs_dataset(models,
                                    tokenizer,
+                                   batch_size=batch_size,
                                    max_generation_length=max_generation_length,
                                    pglue_task=pglue_task,
                                    outputs_path=output_json,
-                                   split=split)
+                                   split=split,
+                                   examples_limit=examples_limit)
     end = time.time()
     print("Generation time: ", end - start)
     from instruction_finetuning.models_evaluation.calculate_f1 import TAKS_EVALUATION_FUNCTIONS
-    evaluation_result = TAKS_EVALUATION_FUNCTIONS[pglue_task](output_json, split=split)
+    evaluation_result = TAKS_EVALUATION_FUNCTIONS[pglue_task](output_json, split=split, examples_limit=examples_limit)
     print("Evaluation result: ", evaluation_result)
     return evaluation_result
 
 
 if __name__ == '__main__':
-    model_name = "alzoubi36/pglue_piextract_priva_t5-base"
+    model_name = "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/2023-09-13/opp_115/latest_model/"
 
-    tokenizer, models = initialize_model(model_name, "t5-base")
-
-    start = time.time()
-    generate_model_outputs_dataset(models, tokenizer, max_generation_length=512, pglue_task="piextract")
-    end = time.time()
-
-    print("Generation time: ", end - start)
+    generate_and_evaluate(model_name=model_name,
+                          tokenizer_name=model_name,
+                          pglue_task="opp_115",
+                          split="test",
+                          output_json="outputs.json",
+                          examples_limit=None,
+                          batch_size=16,
+                          max_generation_length=512)
