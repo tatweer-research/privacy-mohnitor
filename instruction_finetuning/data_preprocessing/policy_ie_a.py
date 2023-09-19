@@ -87,8 +87,13 @@ def to_text2text(path='alzoubi36/policy_ie_a'):
 
 
 def label_from_text(label):
-    label_info = datasets.ClassLabel(names=LABELS)
-    return label_info.str2int(label)
+    if not label:
+        return 0
+    try:
+        label_info = datasets.ClassLabel(names=LABELS)
+        return label_info.str2int(label)
+    except:
+        return 0
 
 
 if __name__ == "__main__":

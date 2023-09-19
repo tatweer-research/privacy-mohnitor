@@ -243,5 +243,5 @@ TAKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
                              "privacy_qa": evaluate_privacy_qa}
 
 if __name__ == '__main__':
-    path = r'/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/alzoubi36/pglue_policy_qa_t5-small/outputs.json'
-    print(evaluate_policy_qa(path, examples_limit=None))
+    path = r'outputs.json'
+    print(evaluate_policy_ie_a(path, examples_limit=None))
