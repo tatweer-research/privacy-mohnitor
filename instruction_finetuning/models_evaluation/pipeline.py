@@ -5,6 +5,7 @@ from instruction_finetuning.models_evaluation import (
     huggingface_search_params,
     initialize_model,
     generate_model_outputs_dataset,
+    generate_and_evaluate,
     get_base_model_name,
     get_task_name,
     TAKS_EVALUATION_FUNCTIONS
@@ -21,6 +22,7 @@ class GeneralConfig(BaseModel):
     path_to_model_outputs: str
     batch_sizes: dict
     requested_sizes: list
+    requested_base_models: list
 
 
 class AppConfig(BaseModel):
@@ -79,6 +81,8 @@ class T5EvaluationPipeline:
     def filter_models(self, model_names):
         model_names = list(filter(self.pglue_model, model_names))
         model_names = list(filter(lambda x: x.split('-')[-1] in self.general_config.requested_sizes, model_names))
+        model_names = list(
+            filter(lambda x: get_base_model_name(x) in self.general_config.requested_base_models, model_names))
         return model_names
 
     def run(self):
@@ -102,17 +106,17 @@ class T5EvaluationPipeline:
                 if model_outputs_json.exists():
                     print(f"Model {model_name} already evaluated. Skipping...")
                     continue
-                tokenizer, model = initialize_model(model_name, tokenizer_name=tokenizer_name)
                 model_outputs_dir.mkdir(parents=True, exist_ok=True)
 
-                generate_model_outputs_dataset(model,
-                                               tokenizer,
-                                               model_outputs_json,
-                                               pglue_task=get_task_name(model_name),
-                                               batch_size=self.get_batch_size(model_name),
-                                               max_generation_length=max_generation_length)
                 task = get_task_name(model_name)
-                evaluation_result = TAKS_EVALUATION_FUNCTIONS[task](model_outputs_json)
+                evaluation_result = generate_and_evaluate(model_name=model_name,
+                                                          batch_size=self.get_batch_size(model_name),
+                                                          examples_limit=None,
+                                                          tokenizer_name=self.get_tokenizer_name(model_name),
+                                                          pglue_task=task,
+                                                          split='test',
+                                                          output_json=model_outputs_json)
+
                 self.results[model_name] = evaluation_result
                 with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
                     json.dump(self.results, f, ensure_ascii=False, indent=4)

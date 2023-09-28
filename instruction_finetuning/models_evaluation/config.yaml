@@ -10,3 +10,6 @@ general:
     requested_sizes:
         - small
         - base
+    requested_base_models:
+        - priva_t5
+        - t5
