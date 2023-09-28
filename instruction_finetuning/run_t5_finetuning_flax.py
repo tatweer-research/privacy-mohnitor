@@ -646,29 +646,29 @@ class T5Finetuner:
                 if cur_step % self.training_args.save_steps == 0 and cur_step > 0:
                     self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'latest_model'))
 
-                    try:
-                        # if float(eval_metrics['loss']) < float(best_eval_metric):
-                        #     best_eval_metric = eval_metrics['loss']
-                        # if float(eval_metrics['accuracy']) > float(best_eval_metric):
-                        #     best_eval_metric = eval_metrics['accuracy']
-                        model_name = os.path.join(self.training_args.output_dir, 'latest_model')
-                        eval_f1 = generate_and_evaluate(model_name=model_name,
-                                                        batch_size=self.training_args.per_device_eval_batch_size,
-                                                        examples_limit=1100,
-                                                        tokenizer_name=model_name,
-                                                        pglue_task=self.task,
-                                                        split='test',
-                                                        output_json="generate_evaluation/latest_model.json")
-                        if float(eval_f1) > float(best_eval_metric):
-                            best_eval_metric = eval_f1
-                            self.save_model(cur_step, state,
-                                            os.path.join(self.training_args.output_dir, 'best_model'))
-                            self.logger.info(f"Saving best model...")
-                            no_improvement_count = 0
-                        else:
-                            no_improvement_count += 1
-                    except Exception as e:
-                        print('Error evaluating model:\n', e)
+                    # try:
+                    #     # if float(eval_metrics['loss']) < float(best_eval_metric):
+                    #     #     best_eval_metric = eval_metrics['loss']
+                    #     # if float(eval_metrics['accuracy']) > float(best_eval_metric):
+                    #     #     best_eval_metric = eval_metrics['accuracy']
+                    #     model_name = os.path.join(self.training_args.output_dir, 'latest_model')
+                    #     eval_f1 = generate_and_evaluate(model_name=model_name,
+                    #                                     batch_size=self.training_args.per_device_eval_batch_size,
+                    #                                     examples_limit=1100,
+                    #                                     tokenizer_name=model_name,
+                    #                                     pglue_task=self.task,
+                    #                                     split='test',
+                    #                                     output_json="generate_evaluation/latest_model.json")
+                    #     if float(eval_f1) > float(best_eval_metric):
+                    #         best_eval_metric = eval_f1
+                    #         self.save_model(cur_step, state,
+                    #                         os.path.join(self.training_args.output_dir, 'best_model'))
+                    #         self.logger.info(f"Saving best model...")
+                    #         no_improvement_count = 0
+                    #     else:
+                    #         no_improvement_count += 1
+                    # except Exception as e:
+                    #     print('Error evaluating model:\n', e)
 
         self.create_training_report()
 
@@ -913,7 +913,7 @@ class T5Finetuner:
     def load_privacy_glue_dataset(self, task='policy_detection'):
         if task not in self.text2text_functions['privacy_glue'].keys():
             raise ValueError(f"Task {task} not found in PrivacyGLUE benchmark.")
-        return self.text2text_functions['privacy_glue'][task]()
+        return self.text2text_functions['privacy_glue'][task]().shuffle(seed=self.training_args.seed)
 
     def handle_hf_repo_creation(self):
         # Handle the repository creation

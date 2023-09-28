@@ -37,7 +37,7 @@ def evaluate_policy_detection(model_outputs_path, split='test', examples_limit=N
     # target_names = ['not_policy', 'policy']
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
-    f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(2)))
+    f1_score_result = f1_score(y_true, y_pred, average='macro', labels=list(range(2)))
     return f1_score_result
 
 
@@ -56,7 +56,7 @@ def evaluate_policy_ie_a(model_outputs_path, split='test', examples_limit=None):
     target_names = policy_ie_a_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=[0, 1, 2, 3, 4])
-    f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(len(target_names))))
+    f1_score_result = f1_score(y_true, y_pred, average='macro', labels=list(range(len(target_names))))
     return f1_score_result
 
 
@@ -88,7 +88,7 @@ def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
     # target_names = opp_115_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=list(range(12)))
-    f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(12)))
+    f1_score_result = f1_score(y_true, y_pred, average='macro', labels=list(range(12)))
     return f1_score_result
 
 
@@ -107,7 +107,7 @@ def evaluate_privacy_qa(model_outputs_path, split='test', examples_limit=None):
     target_names = privacy_qa_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
-    f1_score_result = f1_score(y_true, y_pred, average='micro', labels=list(range(len(target_names))))
+    f1_score_result = f1_score(y_true, y_pred, average='macro', labels=list(range(len(target_names))))
     return f1_score_result
 
 
@@ -138,7 +138,7 @@ def evaluate_piextract(model_outputs_path, split='test', examples_limit=None):
         y_true = [example[subtask]['tags'] for example in dataset][:examples_limit]
         y_pred = [piextract_from_text(example, required_subtask=subtask) for example in results['flax']]
         y_true, y_pred = postprocess(y_true, y_pred)
-        _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='micro')
+        _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='macro')
         f1_scores.append(f1_score_result)
         print(f'{subtask}:\n{f1_score_result}\n')
     return sum(f1_scores) / len(f1_scores)
@@ -173,7 +173,7 @@ def evaluate_policy_ie_b(model_outputs_path, split='test', examples_limit=None):
         y_true = [example[subtask]['tags'] for example in dataset][:examples_limit]
         y_pred = [policy_ie_b_from_text(example, required_subtask=subtask) for example in results['flax']]
         y_true, y_pred = postprocess(y_true, y_pred)
-        _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='micro')
+        _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='macro')
         f1_scores.append(f1_score_result)
         print(f'{subtask}:\n{f1_score_result}\n')
     return sum(f1_scores) / len(f1_scores)
