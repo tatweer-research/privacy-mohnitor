@@ -78,9 +78,10 @@ def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
         if not y_pred[i]:
             y_pred[i] = [7]
         break
-    if len(np.unique(y_pred)) == 1:
+    flat_y_pred = [item for sublist in y_pred for item in sublist]
+    if len(np.unique(flat_y_pred)) == 1:
         a = [0 for i in range(len(opp_115_labels))]
-        a[np.unique(y_pred)[0]] = 1
+        a[np.unique(flat_y_pred)[0]] = 1
         y_pred = np.asarray([a for i in results['flax']])
     y_true = MultiLabelBinarizer().fit_transform(y_true)
     y_pred = MultiLabelBinarizer().fit_transform(y_pred)
@@ -243,5 +244,6 @@ TAKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
                              "privacy_qa": evaluate_privacy_qa}
 
 if __name__ == '__main__':
-    path = r'outputs.json'
-    print(evaluate_policy_ie_a(path, examples_limit=None))
+    path = r'/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/alzoubi36' \
+           r'/pglue_policy_detection_priva_t5-small/outputs.json'
+    print(evaluate_policy_detection(path, examples_limit=None))

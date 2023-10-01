@@ -115,6 +115,7 @@ class T5EvaluationPipeline:
                                                           tokenizer_name=self.get_tokenizer_name(model_name),
                                                           pglue_task=task,
                                                           split='test',
+                                                          max_generation_length=max_generation_length,
                                                           output_json=model_outputs_json)
 
                 self.results[model_name] = evaluation_result
