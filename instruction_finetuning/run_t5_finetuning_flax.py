@@ -840,10 +840,6 @@ class T5Finetuner:
                 "You can do it from another script, save it, and load it from here, using --tokenizer_name."
             )
 
-        # TODO: change
-        # special_tokens = [f'token_id_{i}' for i in range(300)] + \
-        #                  tokenizer.special_tokens_map['additional_special_tokens']
-        # tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
         return tokenizer
 
     def load_finetuning_dataset(self, task='policy_detection'):

@@ -4,7 +4,7 @@ jax[tpu]
 flax>=0.3.5
 optax>=0.0.9
 transformers
-tokenizers
+tokenizers==0.13.0
 tensorboard
 tensorflow
 sentencepiece
