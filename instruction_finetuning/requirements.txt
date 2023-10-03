@@ -15,3 +15,6 @@ pydantic
 scikit-learn
 seqeval
 tabulate
+evaluate
+nltk
+rouge_score

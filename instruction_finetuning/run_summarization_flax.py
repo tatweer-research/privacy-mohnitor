@@ -498,7 +498,7 @@ def main():
             data_args.dataset_config_name,
             cache_dir=model_args.cache_dir,
             keep_in_memory=False,
-            token=model_args.token,
+            # token=model_args.token,
         )
     else:
         data_files = {}
@@ -727,7 +727,7 @@ def main():
         decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
 
         result = metric.compute(predictions=decoded_preds, references=decoded_labels, use_stemmer=True)
-        result = {k: round(v * 100, 4) for k, v in result.items()}
+        result = {k: round(v, 3) for k, v in result.items()}
         prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in preds]
         result["gen_len"] = np.mean(prediction_lens)
         return result
