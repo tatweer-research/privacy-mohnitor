@@ -59,7 +59,6 @@ from transformers import (
 )
 from transformers.utils import is_offline_mode, send_example_telemetry
 
-
 logger = logging.getLogger(__name__)
 
 try:
@@ -71,7 +70,6 @@ except (LookupError, OSError):
         )
     with FileLock(".lock") as lock:
         nltk.download("punkt", quiet=True)
-
 
 MODEL_CONFIG_CLASSES = list(FLAX_MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
@@ -326,10 +324,10 @@ class DataTrainingArguments:
 
     def __post_init__(self):
         if (
-            self.dataset_name is None
-            and self.train_file is None
-            and self.validation_file is None
-            and self.test_file is None
+                self.dataset_name is None
+                and self.train_file is None
+                and self.validation_file is None
+                and self.test_file is None
         ):
             raise ValueError("Need either a dataset name or a training, validation, or test file.")
         else:
@@ -408,7 +406,7 @@ def write_metric(summary_writer, train_metrics, eval_metrics, train_time, step):
 
 
 def create_learning_rate_fn(
-    train_ds_size: int, train_batch_size: int, num_train_epochs: int, num_warmup_steps: int, learning_rate: float
+        train_ds_size: int, train_batch_size: int, num_train_epochs: int, num_warmup_steps: int, learning_rate: float
 ) -> Callable[[int], jnp.array]:
     """Returns a linear warmup, linear_decay learning rate function."""
     steps_per_epoch = train_ds_size // train_batch_size
@@ -445,10 +443,10 @@ def main():
     send_example_telemetry("run_summarization", model_args, data_args, framework="flax")
 
     if (
-        os.path.exists(training_args.output_dir)
-        and os.listdir(training_args.output_dir)
-        and training_args.do_train
-        and not training_args.overwrite_output_dir
+            os.path.exists(training_args.output_dir)
+            and os.listdir(training_args.output_dir)
+            and training_args.do_train
+            and not training_args.overwrite_output_dir
     ):
         raise ValueError(
             f"Output directory ({training_args.output_dir}) already exists and is not empty."
@@ -578,6 +576,7 @@ def main():
             dtype=getattr(jnp, model_args.dtype),
             trust_remote_code=model_args.trust_remote_code,
         )
+
 
     if training_args.gradient_checkpointing:
         model.enable_gradient_checkpointing()
@@ -811,7 +810,7 @@ def main():
         confidence = 1.0 - label_smoothing_factor
         low_confidence = (1.0 - confidence) / (vocab_size - 1)
         normalizing_constant = -(
-            confidence * jnp.log(confidence) + (vocab_size - 1) * low_confidence * jnp.log(low_confidence + 1e-20)
+                confidence * jnp.log(confidence) + (vocab_size - 1) * low_confidence * jnp.log(low_confidence + 1e-20)
         )
         soft_labels = onehot(labels, vocab_size, on_value=confidence, off_value=low_confidence)
 
@@ -895,6 +894,8 @@ def main():
     logger.info(f"  Total optimization steps = {total_train_steps}")
 
     train_time = 0
+    # TODO: change
+    best_eval_metric = 0
     epochs = tqdm(range(num_epochs), desc=f"Epoch ... (1/{num_epochs})", position=0)
     for epoch in epochs:
         # ======================== Training ================================
@@ -970,7 +971,11 @@ def main():
         # save checkpoint after each epoch and push checkpoint to the hub
         if jax.process_index() == 0:
             params = jax.device_get(jax.tree_util.tree_map(lambda x: x[0], state.params))
-            model.save_pretrained(training_args.output_dir, params=params)
+            model.save_pretrained(os.path.join(training_args.output_dir, 'latest_model'), params=params)
+            if rouge_metrics['rougeL'] > best_eval_metric:
+                best_eval_metric = rouge_metrics['rougeL']
+                model.save_pretrained(os.path.join(training_args.output_dir, 'best_model'), params=params)
+
             tokenizer.save_pretrained(training_args.output_dir)
             if training_args.push_to_hub:
                 repo.push_to_hub(commit_message=f"Saving weights and logs of epoch {epoch}", blocking=False)
@@ -978,6 +983,25 @@ def main():
     # ======================== Prediction loop ==============================
     if training_args.do_predict:
         logger.info("*** Predict ***")
+
+        # TODO: change
+        def load_model_state(model_path):
+            _model = FlaxAutoModelForSeq2SeqLM.from_pretrained(
+                model_path,
+                config=config,
+                seed=training_args.seed,
+                dtype=getattr(jnp, model_args.dtype),
+                token=model_args.token,
+                trust_remote_code=model_args.trust_remote_code,
+            )
+            # Setup train state
+            state = TrainState.create(apply_fn=_model.__call__, params=model.params, tx=adamw, dropout_rng=dropout_rng)
+            state = state.replicate()
+            return _model, state
+
+        # Free memory
+        model = None
+        best_model, best_model_state = load_model_state(os.path.join(training_args.output_dir, 'best_model'))
 
         pred_metrics = []
         pred_generations = []
@@ -991,7 +1015,7 @@ def main():
             labels = batch["labels"]
 
             metrics = pad_shard_unpad(p_eval_step, static_return=True)(
-                state.params, batch, min_device_batch=per_device_eval_batch_size
+                best_model_state.params, batch, min_device_batch=per_device_eval_batch_size
             )
             pred_metrics.append(metrics)
 
