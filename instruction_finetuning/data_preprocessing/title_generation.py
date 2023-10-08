@@ -7,7 +7,7 @@ import datasets
 from datasets import load_dataset, Dataset
 
 
-def parse_multiobject_json_files(paths: list[str]) -> list[dict]:
+def parse_multiobject_json_files(paths):
     data = []
     for path in paths:
         file = open(path, encoding="utf-8")
@@ -48,6 +48,20 @@ def load_title_generation(directory: str) -> datasets.DatasetDict:
         combined[split] = dataset
 
     return combined
+
+
+def to_text2text(path='alzoubi36/title_generation'):
+    """Convert title_generation dataset to text2text format"""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        dataset = dataset.map(lambda example: {'text': f"title_generation: {example['text']}",
+                                               'label': example['summary']},
+                              remove_columns=['summary'])
+        dataset_dict[split] = dataset
+    return dataset_dict
 
 
 if __name__ == "__main__":

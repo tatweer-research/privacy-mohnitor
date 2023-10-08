@@ -58,6 +58,7 @@ from transformers import (
     is_tensorboard_available,
 )
 from transformers.utils import is_offline_mode, send_example_telemetry
+from utils.utils import push_model_to_hub
 
 logger = logging.getLogger(__name__)
 
@@ -975,6 +976,7 @@ def main():
             if rouge_metrics['rougeL'] > best_eval_metric:
                 best_eval_metric = rouge_metrics['rougeL']
                 model.save_pretrained(os.path.join(training_args.output_dir, 'best_model'), params=params)
+                logger.info("Saving best model...")
 
             tokenizer.save_pretrained(training_args.output_dir)
             if training_args.push_to_hub:
@@ -982,7 +984,7 @@ def main():
 
     # ======================== Prediction loop ==============================
     if training_args.do_predict:
-        logger.info("*** Predict ***")
+        logger.info("*** Predicting using best model ***")
 
         # TODO: change
         def load_model_state(model_path):
@@ -995,13 +997,16 @@ def main():
                 trust_remote_code=model_args.trust_remote_code,
             )
             # Setup train state
-            state = TrainState.create(apply_fn=_model.__call__, params=model.params, tx=adamw, dropout_rng=dropout_rng)
+            state = TrainState.create(apply_fn=_model.__call__, params=_model.params, tx=adamw, dropout_rng=dropout_rng)
             state = state.replicate()
             return _model, state
 
         # Free memory
         model = None
+        state = None
+        rng, input_rng = jax.random.split(rng)
         best_model, best_model_state = load_model_state(os.path.join(training_args.output_dir, 'best_model'))
+        model = best_model
 
         pred_metrics = []
         pred_generations = []
@@ -1021,7 +1026,7 @@ def main():
 
             # generation
             if data_args.predict_with_generate:
-                generated_ids = pad_shard_unpad(p_generate_step)(state.params, batch)
+                generated_ids = pad_shard_unpad(p_generate_step)(best_model_state.params, batch)
                 pred_generations.extend(jax.device_get(generated_ids.reshape(-1, gen_kwargs["max_length"])))
                 pred_labels.extend(labels)
 
@@ -1046,6 +1051,13 @@ def main():
             path = os.path.join(training_args.output_dir, "test_results.json")
             with open(path, "w") as f:
                 json.dump(rouge_metrics, f, indent=4, sort_keys=True)
+        try:
+            logger.info("*** Pushing best model to hub ***")
+            push_model_to_hub(os.path.join(training_args.output_dir, 'best_model'),
+                              training_args.hub_model_id)
+        except Exception as e:
+            logger.info(e)
+            logger.info("Failed to push model to hub")
 
 
 if __name__ == "__main__":

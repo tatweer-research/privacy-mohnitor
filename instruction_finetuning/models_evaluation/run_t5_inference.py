@@ -200,13 +200,13 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
 
 
 if __name__ == '__main__':
-    model_name = "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/2023-09-18/policy_ie_a/latest_model/"
+    model_name = "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/2023-10-06/privacy_qa/best_model/"
 
     generate_and_evaluate(model_name=model_name,
                           tokenizer_name=model_name,
-                          pglue_task="policy_ie_a",
+                          pglue_task="privacy_qa",
                           split="test",
                           output_json="outputs.json",
                           examples_limit=None,
-                          batch_size=24,
-                          max_generation_length=512)
+                          batch_size=8,
+                          max_generation_length=16)
