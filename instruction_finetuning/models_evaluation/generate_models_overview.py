@@ -29,7 +29,8 @@ params = {
 
 
 def get_task_name(model_name):
-    names = ['policy_ie_a', 'opp_115', 'piextract', 'policy_detection', 'policy_ie_b', 'policy_qa', 'privacy_qa']
+    names = ['policy_ie_a', 'opp_115', 'piextract', 'policy_detection',
+             'policy_ie_b', 'policy_qa', 'privacy_qa', 'multitask']
     for name in names:
         match = re.search(rf'pglue_{name}', model_name)
         if match is not None:

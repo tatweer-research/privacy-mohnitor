@@ -8,8 +8,11 @@ general:
         large: 8
         3b: 4
     requested_sizes:
-        - small
-        - base
+#        - small
+#        - base
+        - large
     requested_base_models:
         - priva_t5
-        - t5
+#        - t5
+    requested_tasks:
+        - privacy_qa

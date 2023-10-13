@@ -65,7 +65,8 @@ def to_text2text(path='alzoubi36/title_generation'):
 
 
 if __name__ == "__main__":
-    path = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data\title_generation"
+    path = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
+           r"\title_generation"
     dataset_dict = load_title_generation(path)
     # dataset_dict.push_to_hub('alzoubi36/title_generation')
     print()

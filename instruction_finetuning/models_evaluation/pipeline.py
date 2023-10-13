@@ -8,7 +8,7 @@ from instruction_finetuning.models_evaluation import (
     generate_and_evaluate,
     get_base_model_name,
     get_task_name,
-    TAKS_EVALUATION_FUNCTIONS
+    TAKS_EVALUATION_FUNCTIONS,
 )
 
 from pathlib import Path
@@ -23,6 +23,7 @@ class GeneralConfig(BaseModel):
     batch_sizes: dict
     requested_sizes: list
     requested_base_models: list
+    requested_tasks: list
 
 
 class AppConfig(BaseModel):
@@ -83,7 +84,51 @@ class T5EvaluationPipeline:
         model_names = list(filter(lambda x: x.split('-')[-1] in self.general_config.requested_sizes, model_names))
         model_names = list(
             filter(lambda x: get_base_model_name(x) in self.general_config.requested_base_models, model_names))
+        model_names = list(filter(lambda x: get_task_name(x) in self.general_config.requested_tasks, model_names))
         return model_names
+
+    def evaluate_model(self, model_name, task):
+        print(f"Running inference on model {model_name} with task {task}...")
+
+        model_save_name = model_name
+
+        if get_task_name(model_name) == 'multitask':
+            model_save_name = model_name.replace('multitask', task)
+
+        # Free space for new models
+        if get_task_name(model_name) != 'multitask':
+            self.remove_huggingface_cache()
+
+        tokenizer_name = self.get_tokenizer_name(model_name)
+        max_generation_length = 5 if task == 'privacy_qa' else 512
+        print(f"Limiting generation length on model {model_name} to {max_generation_length} tokens...")
+        try:
+            model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_save_name)
+            model_outputs_json = model_outputs_dir / 'outputs.json'
+            if model_outputs_json.exists():
+                print(f"Model {model_name} already evaluated. Skipping...")
+                return None
+
+            model_outputs_dir.mkdir(parents=True, exist_ok=True)
+            evaluation_result = generate_and_evaluate(model_name=model_name,
+                                                      batch_size=self.get_batch_size(model_name),
+                                                      examples_limit=None,
+                                                      tokenizer_name=self.get_tokenizer_name(model_name),
+                                                      pglue_task=task,
+                                                      split='test',
+                                                      max_generation_length=max_generation_length,
+                                                      output_json=model_outputs_json)
+
+            self.results[model_save_name] = evaluation_result
+            with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
+                json.dump(self.results, f, ensure_ascii=False, indent=4)
+
+        except Exception as e:
+            print(f"Error running inference on model {model_name}: {e}")
+            print(f"Batch size: {self.get_batch_size(model_name)}")
+            print(f"Tokenizer name: {tokenizer_name}")
+            print(f"Task: {get_task_name(model_name)}")
+            print("Skipping model...")
 
     def run(self):
         available_models = list_models(huggingface_search_params)
@@ -92,43 +137,13 @@ class T5EvaluationPipeline:
 
         print(f"Found {len(model_names)} models...")
         for model_name in model_names:
-            print(f"Running inference on model {model_name}...")
 
-            # Free space for new models
-            self.remove_huggingface_cache()
-            tokenizer_name = self.get_tokenizer_name(model_name)
-            max_generation_length = 5 if get_task_name(model_name) == 'privacy_qa' else 512
-            print(f"Limiting generation length on model {model_name} to {max_generation_length} tokens...")
-
-            try:
-                model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_name)
-                model_outputs_json = model_outputs_dir / 'outputs.json'
-                if model_outputs_json.exists():
-                    print(f"Model {model_name} already evaluated. Skipping...")
-                    continue
-                model_outputs_dir.mkdir(parents=True, exist_ok=True)
-
-                task = get_task_name(model_name)
-                evaluation_result = generate_and_evaluate(model_name=model_name,
-                                                          batch_size=self.get_batch_size(model_name),
-                                                          examples_limit=None,
-                                                          tokenizer_name=self.get_tokenizer_name(model_name),
-                                                          pglue_task=task,
-                                                          split='test',
-                                                          max_generation_length=max_generation_length,
-                                                          output_json=model_outputs_json)
-
-                self.results[model_name] = evaluation_result
-                with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
-                    json.dump(self.results, f, ensure_ascii=False, indent=4)
-
-            except Exception as e:
-                print(f"Error running inference on model {model_name}: {e}")
-                print(f"Batch size: {self.get_batch_size(model_name)}")
-                print(f"Tokenizer name: {tokenizer_name}")
-                print(f"Task: {get_task_name(model_name)}")
-                print("Skipping model...")
-                continue
+            task = get_task_name(model_name)
+            if task != 'multitask':
+                self.evaluate_model(model_name, task)
+            else:
+                for task in self.general_config.requested_tasks:
+                    self.evaluate_model(model_name, task)
 
 
 if __name__ == '__main__':

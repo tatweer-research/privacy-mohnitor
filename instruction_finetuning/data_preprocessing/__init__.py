@@ -7,7 +7,7 @@ from instruction_finetuning.data_preprocessing.policy_qa import label_from_text 
 from instruction_finetuning.data_preprocessing.privacy_qa import label_from_text as privacy_qa_from_text
 from instruction_finetuning.data_preprocessing.multitask_learning import text2text_functions, prepare_multitask_datasetdict
 
-text2text_functions['privacy_glue']['multitask'] = prepare_multitask_datasetdict
+text2text_functions['multitask'] = prepare_multitask_datasetdict
 
 from_text_functions = {
     "privacy_glue": {
@@ -21,4 +21,4 @@ from_text_functions = {
     }
 }
 
-TASKS = list(text2text_functions["privacy_glue"].keys())
+TASKS = list(text2text_functions["privacy_glue"].keys()) + ["multitask"]

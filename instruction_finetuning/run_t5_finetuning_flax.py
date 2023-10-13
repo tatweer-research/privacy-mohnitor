@@ -63,6 +63,7 @@ from transformers.models.t5.modeling_flax_t5 import shift_tokens_right
 from transformers.utils import get_full_repo_name, send_example_telemetry
 
 from instruction_finetuning.data_preprocessing import text2text_functions
+from instruction_finetuning.data_preprocessing.multitask_learning import prepare_multitask_datasetdict
 from instruction_finetuning.data_preprocessing import TASKS as PRIVACY_GLUE_TASKS
 from instruction_finetuning.models_evaluation.run_t5_inference import generate_and_evaluate
 
@@ -458,8 +459,7 @@ class T5Finetuner:
         dropout_rngs = jax.random.split(rng, jax.local_device_count())
 
         best_model = None
-        # best_eval_metric = 10 ** 10
-        best_eval_metric = 0.0
+        best_eval_metric = 10 ** 10 if self.task == 'multitask' else 0.0
 
         # Store some constant
         num_epochs = int(self.training_args.num_train_epochs)
@@ -647,26 +647,34 @@ class T5Finetuner:
                     self.save_model(cur_step, state, os.path.join(self.training_args.output_dir, 'latest_model'))
 
                     try:
-                        # if float(eval_metrics['loss']) < float(best_eval_metric):
-                        #     best_eval_metric = eval_metrics['loss']
-                        # if float(eval_metrics['accuracy']) > float(best_eval_metric):
-                        #     best_eval_metric = eval_metrics['accuracy']
-                        model_name = os.path.join(self.training_args.output_dir, 'latest_model')
-                        eval_f1 = generate_and_evaluate(model_name=model_name,
-                                                        batch_size=self.training_args.per_device_eval_batch_size,
-                                                        examples_limit=500,
-                                                        tokenizer_name=model_name,
-                                                        pglue_task=self.task,
-                                                        split='test',
-                                                        output_json="generate_evaluation/latest_model.json")
-                        if float(eval_f1) > float(best_eval_metric):
-                            best_eval_metric = eval_f1
-                            self.save_model(cur_step, state,
-                                            os.path.join(self.training_args.output_dir, 'best_model'))
-                            self.logger.info(f"Saving best model...")
-                            no_improvement_count = 0
+                        if self.task == 'multitask':
+                            if float(eval_metrics['loss']) < float(best_eval_metric):
+                                best_eval_metric = eval_metrics['loss']
+                                # if float(eval_metrics['accuracy']) > float(best_eval_metric):
+                                #     best_eval_metric = eval_metrics['accuracy']
+                                self.save_model(cur_step, state,
+                                                os.path.join(self.training_args.output_dir, 'best_model'))
+                                self.logger.info(f"Saving best model...")
+                                no_improvement_count = 0
+                            else:
+                                no_improvement_count += 1
                         else:
-                            no_improvement_count += 1
+                            model_name = os.path.join(self.training_args.output_dir, 'latest_model')
+                            eval_f1 = generate_and_evaluate(model_name=model_name,
+                                                            batch_size=self.training_args.per_device_eval_batch_size,
+                                                            examples_limit=500,
+                                                            tokenizer_name=model_name,
+                                                            pglue_task=self.task,
+                                                            split='test',
+                                                            output_json="generate_evaluation/latest_model.json")
+                            if float(eval_f1) > float(best_eval_metric):
+                                best_eval_metric = eval_f1
+                                self.save_model(cur_step, state,
+                                                os.path.join(self.training_args.output_dir, 'best_model'))
+                                self.logger.info(f"Saving best model...")
+                                no_improvement_count = 0
+                            else:
+                                no_improvement_count += 1
                     except Exception as e:
                         print('Error evaluating model:\n', e)
 
@@ -907,8 +915,12 @@ class T5Finetuner:
         return datasets
 
     def load_privacy_glue_dataset(self, task='policy_detection'):
+        if task == 'multitask':
+            return self.text2text_functions[task]().shuffle(seed=self.training_args.seed)
+
         if task not in self.text2text_functions['privacy_glue'].keys():
-            raise ValueError(f"Task {task} not found in PrivacyGLUE benchmark.")
+            raise ValueError(f"Task {task} not supported. Current supported tasks: "
+                             f"{PRIVACY_GLUE_TASKS}")
         return self.text2text_functions['privacy_glue'][task]().shuffle(seed=self.training_args.seed)
 
     def handle_hf_repo_creation(self):
@@ -993,8 +1005,8 @@ class T5Finetuner:
         self.results = {}
         for task in tasks:
             if task not in PRIVACY_GLUE_TASKS:
-                raise ValueError(f"Task \"{task}\" not found in PrivacyGLUE benchmark. "
-                                 f"Task must be one of {PRIVACY_GLUE_TASKS}")
+                raise ValueError(f"Task \"{task}\" is not supported. "
+                                 f"Task must be one of: \n{PRIVACY_GLUE_TASKS}")
             ############ TODO: change
             task_results = []
             self.task = task
@@ -1021,24 +1033,26 @@ class T5Finetuner:
                 # Free memory
                 self.model = None
                 try:
+                    self.logger.info(f'Pushing best model to HuggingFace Hub...')
                     push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
                                       f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
                     ###############
-                    import time
+                    if not task == 'multitask':
+                        import time
 
-                    time.sleep(10)
-                    best_model = os.path.join(self.training_args.output_dir, 'best_model')
-                    evaluation_result = generate_and_evaluate(model_name=best_model,
-                                                              tokenizer_name=best_model,
-                                                              pglue_task=task,
-                                                              output_json=f"generate_evaluation/{task}.json")
-                    task_results += [evaluation_result]
-                    self.results[f'pglue_{task}_{self.model_args.hub_save_name_or_path}'] = evaluation_result
-                    self.results[f'best_{task}'] = max(task_results)
-                    self.logger.info(self.results)
-                    with open("generate_evaluation/training_results.json", 'w', encoding="utf-8") as f:
-                        json.dump(self.results, f, ensure_ascii=False, indent=4)
+                        time.sleep(10)
+                        best_model = os.path.join(self.training_args.output_dir, 'best_model')
+                        evaluation_result = generate_and_evaluate(model_name=best_model,
+                                                                  tokenizer_name=best_model,
+                                                                  pglue_task=task,
+                                                                  output_json=f"generate_evaluation/{task}.json")
+                        task_results += [evaluation_result]
+                        self.results[f'pglue_{task}_{self.model_args.hub_save_name_or_path}'] = evaluation_result
+                        self.results[f'best_{task}'] = max(task_results)
+                        self.logger.info(self.results)
+                        with open("generate_evaluation/training_results.json", 'w', encoding="utf-8") as f:
+                            json.dump(self.results, f, ensure_ascii=False, indent=4)
                     ###############
 
                 except Exception as e:
