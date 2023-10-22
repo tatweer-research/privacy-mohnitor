@@ -15,5 +15,14 @@ general:
     requested_base_models:
         - priva_t5
         - t5
-    requested_tasks:
+    requested_tasks: # Used to initially filter models
+        - policy_ie_a
+        - opp_115
+        - piextract
+        - policy_detection
+        - policy_ie_b
+        - policy_qa
+        - privacy_qa
+
+    requested_mtl_tasks:
         - privacy_qa

@@ -28,6 +28,7 @@ class GeneralConfig(BaseModel):
     requested_sizes: list
     requested_base_models: list
     requested_tasks: list
+    requested_mtl_tasks: list
     examples_limit: int
 
 
@@ -98,12 +99,12 @@ class T5EvaluationPipeline:
 
         model_save_name = model_name
 
-        if get_task_name(model_name) == 'multitask':
-            model_save_name = model_name.replace('multitask', task)
-
         # Free space for new models
         if get_task_name(model_name) != 'multitask':
             self.remove_huggingface_cache()
+
+        elif get_task_name(model_name) == 'multitask':
+            model_save_name = model_name.replace('multitask', task)
 
         tokenizer_name = self.get_tokenizer_name(model_name)
         max_generation_length = 5 if task == 'privacy_qa' else 512
@@ -148,8 +149,8 @@ class T5EvaluationPipeline:
             if task != 'multitask':
                 self.evaluate_model(model_name, task)
             else:
-                for task in self.general_config.requested_tasks:
-                    self.evaluate_model(model_name, task)
+                for _task in self.general_config.requested_mtl_tasks:
+                    self.evaluate_model(model_name, _task)
 
 
 if __name__ == '__main__':
