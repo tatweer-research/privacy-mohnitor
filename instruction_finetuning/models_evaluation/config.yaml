@@ -2,6 +2,7 @@ general:
     remote_user: "Mohammad.Al-Zoubi"
     path_to_results_json: "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/results.json"
     path_to_model_outputs: "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference"
+    examples_limit: 1100
     batch_sizes:
         small: 32
         base: 16
@@ -13,6 +14,6 @@ general:
         - large
     requested_base_models:
         - priva_t5
-#        - t5
+        - t5
     requested_tasks:
         - privacy_qa
