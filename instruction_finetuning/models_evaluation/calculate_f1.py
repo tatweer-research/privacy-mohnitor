@@ -86,7 +86,7 @@ def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
     y_true = MultiLabelBinarizer().fit_transform(y_true)
     y_pred = MultiLabelBinarizer().fit_transform(y_pred)
 
-    # target_names = opp_115_labels
+    target_names = opp_115_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=list(range(12)))
     f1_score_result = f1_score(y_true, y_pred, average='macro', labels=list(range(12)))
@@ -235,7 +235,7 @@ def evaluate_policy_qa(model_outputs_path, split='test', examples_limit=None):
     return np.sum(y_true == y_pred) / len(y_true)
 
 
-TAKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
+TASKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
                              "opp_115": evaluate_opp_115,
                              "piextract": evaluate_piextract,
                              "policy_detection": evaluate_policy_detection,

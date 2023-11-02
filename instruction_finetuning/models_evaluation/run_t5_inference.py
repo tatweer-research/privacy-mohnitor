@@ -193,8 +193,8 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
                                    examples_limit=examples_limit)
     end = time.time()
     print("Generation time: ", end - start)
-    from instruction_finetuning.models_evaluation.calculate_f1 import TAKS_EVALUATION_FUNCTIONS
-    evaluation_result = TAKS_EVALUATION_FUNCTIONS[pglue_task](output_json, split=split, examples_limit=examples_limit)
+    from instruction_finetuning.models_evaluation.calculate_f1 import TASKS_EVALUATION_FUNCTIONS
+    evaluation_result = TASKS_EVALUATION_FUNCTIONS[pglue_task](output_json, split=split, examples_limit=examples_limit)
     print("Evaluation result: ", evaluation_result)
     return evaluation_result
 

@@ -9,7 +9,7 @@ from instruction_finetuning.models_evaluation import (
     generate_and_evaluate,
     get_base_model_name,
     get_task_name,
-    TAKS_EVALUATION_FUNCTIONS,
+    TASKS_EVALUATION_FUNCTIONS,
 )
 
 from pathlib import Path

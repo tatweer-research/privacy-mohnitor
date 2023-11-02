@@ -3,4 +3,4 @@ from instruction_finetuning.models_evaluation.generate_models_overview import li
 from instruction_finetuning.models_evaluation.run_t5_inference import initialize_model, generate_model_outputs_dataset, \
     generate_and_evaluate
 from instruction_finetuning.models_evaluation.generate_models_overview import get_base_model_name, get_task_name
-from instruction_finetuning.models_evaluation.calculate_f1 import TAKS_EVALUATION_FUNCTIONS
+from instruction_finetuning.models_evaluation.calculate_f1 import TASKS_EVALUATION_FUNCTIONS
