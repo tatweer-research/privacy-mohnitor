@@ -100,42 +100,42 @@ class T5EvaluationPipeline:
         model_save_name = model_name
 
         # Free space for new models
-        if get_task_name(model_name) != 'multitask':
-            self.remove_huggingface_cache()
+        # if get_task_name(model_name) != 'multitask':
+        #     self.remove_huggingface_cache()
 
-        elif get_task_name(model_name) == 'multitask':
-            model_save_name = model_name.replace('multitask', task)
+        # elif get_task_name(model_name) == 'multitask':
+        #     model_save_name = model_name.replace('multitask', task)
 
         tokenizer_name = self.get_tokenizer_name(model_name)
         max_generation_length = 5 if task == 'privacy_qa' else 512
         logger.info(f"Limiting generation length on model {model_name} to {max_generation_length} tokens...")
-        try:
-            model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_save_name)
-            model_outputs_json = model_outputs_dir / 'outputs.json'
-            if model_outputs_json.exists():
-                logger.info(f"Model {model_name} already evaluated. Skipping...")
-                return None
+        # try:
+        model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_save_name)
+        model_outputs_json = model_outputs_dir / 'outputs.json'
+        if model_outputs_json.exists():
+            logger.info(f"Model {model_name} already evaluated. Skipping...")
+            return None
 
-            model_outputs_dir.mkdir(parents=True, exist_ok=True)
-            evaluation_result = generate_and_evaluate(model_name=model_name,
-                                                      batch_size=self.get_batch_size(model_name),
-                                                      examples_limit=self.general_config.examples_limit,
-                                                      tokenizer_name=self.get_tokenizer_name(model_name),
-                                                      pglue_task=task,
-                                                      split='test',
-                                                      max_generation_length=max_generation_length,
-                                                      output_json=model_outputs_json)
+        model_outputs_dir.mkdir(parents=True, exist_ok=True)
+        evaluation_result = generate_and_evaluate(model_name=model_name,
+                                                  batch_size=self.get_batch_size(model_name),
+                                                  examples_limit=self.general_config.examples_limit,
+                                                  tokenizer_name=self.get_tokenizer_name(model_name),
+                                                  pglue_task=task,
+                                                  split='test',
+                                                  max_generation_length=max_generation_length,
+                                                  output_json=model_outputs_json)
 
-            self.results[model_save_name] = evaluation_result
-            with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
-                json.dump(self.results, f, ensure_ascii=False, indent=4)
+        self.results[model_save_name] = evaluation_result
+        with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
+            json.dump(self.results, f, ensure_ascii=False, indent=4)
 
-        except Exception as e:
-            logger.info(f"Error running inference on model {model_name}:\n{e}")
-            logger.info(f"Batch size: {self.get_batch_size(model_name)}")
-            logger.info(f"Tokenizer name: {tokenizer_name}")
-            logger.info(f"Task: {get_task_name(model_name)}")
-            logger.info("Skipping model...")
+        # except Exception as e:
+        #     logger.info(f"Error running inference on model {model_name}:\n{e}")
+        #     logger.info(f"Batch size: {self.get_batch_size(model_name)}")
+        #     logger.info(f"Tokenizer name: {tokenizer_name}")
+        #     logger.info(f"Task: {get_task_name(model_name)}")
+        #     logger.info("Skipping model...")
 
     def run(self):
         available_models = list_models(huggingface_search_params)
