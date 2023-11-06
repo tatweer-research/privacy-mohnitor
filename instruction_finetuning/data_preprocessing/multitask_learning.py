@@ -82,7 +82,7 @@ def prepare_multitask_dataset(alpha, split, percentage_of_total_examples=1.0):
     return multitask_dataset.shuffle(seed=random.randint(1, 1000))
 
 
-def prepare_multitask_datasetdict(alpha=0.001, percentage_of_total_examples=0.5):
+def prepare_multitask_datasetdict(alpha=0.01, percentage_of_total_examples=1.0):
     dataset_dict = datasets.DatasetDict()
 
     splits = ['train', 'test', 'validation']

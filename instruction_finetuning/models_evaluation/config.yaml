@@ -9,22 +9,23 @@ general:
         large: 8
         3b: 4
     requested_sizes:
-        - small
-        - base
+#        - small
+#        - base
         - large
     requested_base_models:
-#        - priva_t5
-#        - t5
-        - priva_t5-v1.1
-        - t5-v1.1
+        - priva_t5
+        - t5
+#        - priva_t5-v1.1
+#        - t5-v1.1
     requested_tasks: # Used to initially filter models
-        - policy_ie_a
-        - opp_115
-        - piextract
-        - policy_detection
-        - policy_ie_b
+#        - policy_ie_a
+#        - opp_115
+#        - piextract
+#        - policy_detection
+#        - policy_ie_b
         - policy_qa
-        - privacy_qa
+#        - privacy_qa
+#        - multitask
 
     requested_mtl_tasks:
         - privacy_qa

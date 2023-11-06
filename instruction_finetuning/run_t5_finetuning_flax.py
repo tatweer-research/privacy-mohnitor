@@ -63,7 +63,6 @@ from transformers.models.t5.modeling_flax_t5 import shift_tokens_right
 from transformers.utils import get_full_repo_name, send_example_telemetry
 
 from instruction_finetuning.data_preprocessing import text2text_functions
-from instruction_finetuning.data_preprocessing.multitask_learning import prepare_multitask_datasetdict
 from instruction_finetuning.data_preprocessing import TASKS as PRIVACY_GLUE_TASKS
 from instruction_finetuning.models_evaluation.run_t5_inference import generate_and_evaluate
 

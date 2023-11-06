@@ -5,7 +5,8 @@ from instruction_finetuning.data_preprocessing.policy_detection import label_fro
 from instruction_finetuning.data_preprocessing.policy_ie_b import label_from_text as policy_ie_b_from_text
 from instruction_finetuning.data_preprocessing.policy_qa import label_from_text as policy_qa_from_text
 from instruction_finetuning.data_preprocessing.privacy_qa import label_from_text as privacy_qa_from_text
-from instruction_finetuning.data_preprocessing.multitask_learning import text2text_functions, prepare_multitask_datasetdict
+from instruction_finetuning.data_preprocessing.multitask_learning import text2text_functions, \
+    prepare_multitask_datasetdict
 
 text2text_functions['multitask'] = prepare_multitask_datasetdict
 
