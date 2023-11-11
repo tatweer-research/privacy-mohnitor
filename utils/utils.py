@@ -8,6 +8,12 @@ def get_current_date():
     return current_date.strftime('%Y-%m-%d')
 
 
+def get_current_date_and_time():
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime('%Y-%m-%d %H:%M')
+    return formatted_datetime
+
+
 def generate_model_card(model_name='alzoubi36/t5-test'):
     card_data = ModelCardData(language='en', license='mit', library_name='keras')
     card = ModelCard.from_template(

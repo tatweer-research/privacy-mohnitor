@@ -86,12 +86,13 @@ class T5EvaluationPipeline:
             tokenizer_name = 'google' + '/' + tokenizer_name.replace('.', '_')
         return tokenizer_name
 
-    def filter_models(self, model_names):
-        model_names = list(filter(self.pglue_model, model_names))
+    def filter_models(self, model_names, privacy_glue_only=True):
+        if privacy_glue_only:
+            model_names = list(filter(self.pglue_model, model_names))
         model_names = list(filter(lambda x: x.split('-')[-1] in self.general_config.requested_sizes, model_names))
         model_names = list(
             filter(lambda x: get_base_model_name(x) in self.general_config.requested_base_models, model_names))
-        model_names = list(filter(lambda x: get_task_name(x) in self.general_config.requested_tasks, model_names))
+        model_names = list(filter(lambda x: get_task_name(x, privacy_glue_only) in self.general_config.requested_tasks, model_names))
         return model_names
 
     def evaluate_model(self, model_name, task):

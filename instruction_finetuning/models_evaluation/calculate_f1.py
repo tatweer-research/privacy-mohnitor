@@ -83,8 +83,8 @@ def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
         a = [0 for i in range(len(opp_115_labels))]
         a[np.unique(flat_y_pred)[0]] = 1
         y_pred = np.asarray([a for i in results['flax']])
-    y_true = MultiLabelBinarizer().fit_transform(y_true)
-    y_pred = MultiLabelBinarizer().fit_transform(y_pred)
+    y_true = MultiLabelBinarizer(classes=np.arange(len(opp_115_labels))).fit_transform(y_true)
+    y_pred = MultiLabelBinarizer(classes=np.arange(len(opp_115_labels))).fit_transform(y_pred)
 
     target_names = opp_115_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)

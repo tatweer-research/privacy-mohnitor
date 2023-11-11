@@ -65,6 +65,8 @@ from transformers.utils import get_full_repo_name, send_example_telemetry
 from instruction_finetuning.data_preprocessing import text2text_functions
 from instruction_finetuning.data_preprocessing import TASKS as PRIVACY_GLUE_TASKS
 from instruction_finetuning.models_evaluation.run_t5_inference import generate_and_evaluate
+from instruction_finetuning.models_evaluation.pipeline import T5EvaluationPipeline, list_models, \
+    huggingface_search_params, parse_config
 
 from utils import create_pdf_from_tensorboard, get_current_date, push_model_to_hub
 
@@ -112,6 +114,9 @@ class TrainingArguments:
     seed: int = field(default=42, metadata={"help": "Random seed that will be set at the beginning of training."})
     push_to_hub: bool = field(
         default=False, metadata={"help": "Whether or not to upload the trained model to the model hub after training."}
+    )
+    task2task: bool = field(
+        default=False, metadata={"help": "If a task2task training is done."}
     )
     hub_model_id: str = field(
         default=None, metadata={"help": "The name of the repository to keep in sync with the local `output_dir`."}
@@ -589,7 +594,7 @@ class T5Finetuner:
                         write_train_metric(self.summary_writer, train_metrics, train_time, cur_step)
 
                     epochs.write(
-                        f"Step... ({cur_step} | Loss: {train_metric['loss'].mean()}, Learning Rate:"
+                        f"Training Step... ({cur_step} | Loss: {train_metric['loss'].mean()}, Learning Rate:"
                         f" {train_metric['learning_rate'].mean()})"
                     )
 
@@ -659,13 +664,16 @@ class T5Finetuner:
                                 no_improvement_count += 1
                         else:
                             model_name = os.path.join(self.training_args.output_dir, 'latest_model')
+                            json_path = os.path.join(self.training_args.output_dir,
+                                                     f"generate_evaluation",
+                                                     "latest_model.json")
                             eval_f1 = generate_and_evaluate(model_name=model_name,
                                                             batch_size=self.training_args.per_device_eval_batch_size,
-                                                            examples_limit=500,
+                                                            examples_limit=1100,
                                                             tokenizer_name=model_name,
                                                             pglue_task=self.task,
                                                             split='test',
-                                                            output_json="generate_evaluation/latest_model.json")
+                                                            output_json=json_path)
                             if float(eval_f1) > float(best_eval_metric):
                                 best_eval_metric = eval_f1
                                 self.save_model(cur_step, state,
@@ -1000,6 +1008,9 @@ class T5Finetuner:
         self.logger.info(f'======================= Finetuning {self.model_args.model_name_or_path} on the following '
                          f'tasks: =======================')
         self.logger.info(f'{tasks}')
+        intermediate_path = os.path.join(self._cached_output_dir,
+                                         self.model_args.model_name_or_path)
+
         ############### TODO: change
         self.results = {}
         for task in tasks:
@@ -1010,8 +1021,9 @@ class T5Finetuner:
             task_results = []
             self.task = task
             # Create a task directory
-            self.training_args.output_dir = os.path.join(self._cached_output_dir, task)
+            self.training_args.output_dir = os.path.join(intermediate_path, task)
             Path(self.training_args.output_dir).mkdir(parents=True, exist_ok=True)
+            Path(os.path.join(self.training_args.output_dir, f"generate_evaluation")).mkdir(parents=True, exist_ok=True)
 
             self.datasets = self.load_privacy_glue_dataset(task=task)
             self.tokenizer = self.load_tokenizer()
@@ -1032,10 +1044,14 @@ class T5Finetuner:
                 # Free memory
                 self.model = None
                 try:
-                    self.logger.info(f'Pushing best model to HuggingFace Hub...')
-                    push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
-                                      f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
-
+                    if not self.training_args.task2task:
+                        self.logger.info(f'Pushing best model to HuggingFace Hub...')
+                        # push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
+                        #                   f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
+                    else:
+                        self.logger.info(f'Pushing best task2task model to HuggingFace Hub...')
+                        # push_model_to_hub(os.path.join(self.training_args.output_dir, 'best_model'),
+                        #                   f'pglue_{task}_{self.model_args.model_name_or_path.split("/")[1]}')
                     ###############
                     if not task == 'multitask':
                         import time
@@ -1045,12 +1061,17 @@ class T5Finetuner:
                         evaluation_result = generate_and_evaluate(model_name=best_model,
                                                                   tokenizer_name=best_model,
                                                                   pglue_task=task,
-                                                                  output_json=f"generate_evaluation/{task}.json")
+                                                                  output_json=os.path.join(
+                                                                      self.training_args.output_dir,
+                                                                      f"generate_evaluation",
+                                                                      f"{task}.json"))
                         task_results += [evaluation_result]
                         self.results[f'pglue_{task}_{self.model_args.hub_save_name_or_path}'] = evaluation_result
                         self.results[f'best_{task}'] = max(task_results)
                         self.logger.info(self.results)
-                        with open("generate_evaluation/training_results.json", 'w', encoding="utf-8") as f:
+                        with open(os.path.join(self.training_args.output_dir,
+                                               f"generate_evaluation",
+                                               f"training_results.json"), 'w', encoding="utf-8") as f:
                             json.dump(self.results, f, ensure_ascii=False, indent=4)
                     ###############
 
@@ -1059,7 +1080,26 @@ class T5Finetuner:
                     push_model_to_hub(os.path.join(self.training_args.output_dir, 'latest_model'),
                                       f'pglue_{task}_{self.model_args.hub_save_name_or_path}')
 
+    def task2task_finetune(self):
+        config = parse_config(
+            "/home/Mohammad.Al-Zoubi/privacy-mohnitor/utils/task2task_config.yaml")
+        pipeline = T5EvaluationPipeline(config)
+        available_models = list_models(huggingface_search_params)
+        model_names = [model['modelId'] for model in available_models]
+        model_names = pipeline.filter_models(model_names, privacy_glue_only=False)
+        self.logger.info(f'======================= Found the following finetuned {len(model_names)} models: '
+                         f'=======================')
+        self.logger.info(f'{model_names}')
+
+        for model_name in model_names:
+            self.model_args.model_name_or_path = model_name
+            self.training_args.model_name_or_path = model_name
+            self.model_args.tokenizer_name = pipeline.get_tokenizer_name(model_name)
+            self.model_args.config_name = model_name
+            self.finetune_on_privacy_glue()
+
 
 if __name__ == "__main__":
     finetuner = T5Finetuner()
     finetuner.finetune_on_privacy_glue()
+    # finetuner.task2task_finetune()

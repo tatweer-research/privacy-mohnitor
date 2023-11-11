@@ -28,9 +28,15 @@ params = {
 }
 
 
-def get_task_name(model_name):
+def get_task_name(model_name, privacy_glue_only=True):
     names = ['policy_ie_a', 'opp_115', 'piextract', 'policy_detection',
              'policy_ie_b', 'policy_qa', 'privacy_qa', 'multitask']
+
+    if not privacy_glue_only:
+        match = re.search(rf'title_generation', model_name)
+        if match is not None:
+            return match.group(0)
+
     for name in names:
         match = re.search(rf'pglue_{name}', model_name)
         if match is not None:

@@ -17,6 +17,26 @@ FLAX = True
 PT = False
 
 
+# TODO: Remove this function
+def run_task2task_inference(models, tokenizer):
+    input_texts = r"""Give a title to the following text: Any information regarding a natural person, a legal person, 
+    an institution or an association, which is, or can be, identified, even indirectly, by reference to any other 
+    information, including a personal identification number."""
+    inputs = tokenizer(input_texts,
+                       max_length=512,
+                       padding="max_length",
+                       truncation=True,
+                       return_attention_mask=False,
+                       return_tensors="pt"
+                       )
+
+    output_sequences = models['pt'].generate(
+        input_ids=inputs["input_ids"],
+        do_sample=False,  # disable sampling to test if batching affects output
+    )
+    print(tokenizer.batch_decode(output_sequences, skip_special_tokens=True))
+
+
 def initialize_model(model_name, tokenizer_name, use_flax=FLAX, use_pt=PT):
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
     models = {'flax': '', 'pt': ''}
@@ -200,13 +220,14 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
 
 
 if __name__ == '__main__':
-    model_name = "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/2023-10-06/privacy_qa/best_model/"
+    model_name = r"/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/2023-11-09/alzoubi36" \
+                 r"/priva_t5-large/opp_115/best_model/opp_115/latest_model/"
 
     generate_and_evaluate(model_name=model_name,
                           tokenizer_name=model_name,
-                          pglue_task="privacy_qa",
+                          pglue_task="opp_115",
                           split="test",
                           output_json="outputs.json",
                           examples_limit=None,
                           batch_size=8,
-                          max_generation_length=16)
+                          max_generation_length=8)

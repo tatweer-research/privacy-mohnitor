@@ -3,7 +3,6 @@ general:
     path_to_results_json: "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/results.json"
     path_to_model_outputs: "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference"
     examples_limit: 1100
-    generate_only: False
     batch_sizes:
         small: 32
         base: 16
