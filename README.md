@@ -2,6 +2,13 @@
 
 This repository contains the research work done in the master's thesis of Mohammad Al Zoubi with the title "Privacy Policy Analysis: Leveraging Bidirectional Language Model Pretraining and Instruction Fine-Tuning". The thesis was supervised by Prof. Dr. Matthias Grabmair and advised by Santosh Tokala at TUM Chair for LegalTech.
 
+All trained models can be found [here](https://huggingface.co/alzoubi36).
+
+The ACL submission paper can be found [here](https://drive.google.com/file/d/1X9Vl13CaeMbf-6beup4xj1bJUlyONG6e/view?usp=sharing)
+.
+
+The full thesis can be found [here](https://drive.google.com/file/d/11hmPDNAmG0giowTheShO9H8SLoW94fV6/view?usp=sharing).
+
 ## Research Objective
 
 This research aims to explore the effectiveness of generative language models for privacy policy-related tasks. We investigate the benefits of pre-training on the PrivaSeer corpus and compare the performance of PrivaT5 variants with the widely-used T5 model on a range of privacy tasks. Additionally, we explore single-task and multi-task learning approaches and evaluate the effectiveness of instruction-finetuned FlanT5 models in a zero-shot setting.
