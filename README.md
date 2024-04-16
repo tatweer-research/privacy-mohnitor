@@ -33,7 +33,7 @@ pip install -r instruction_finetuning/requirements.txt
 
 ## Contributing
 
-Contributions are welcome! Please refer to the CONTRIBUTING.md file for guidelines.
+Contributions are welcome!
 
 ## License
 
