@@ -1005,7 +1005,7 @@ def main():
         model = None
         state = None
         rng, input_rng = jax.random.split(rng)
-        best_model, best_model_state = load_model_state(os.path.join(training_args.output_dir, 'best_model'))
+        best_model, best_model_state = load_model_state(model_args.model_name_or_path)
         model = best_model
 
         pred_metrics = []
@@ -1053,8 +1053,8 @@ def main():
                 json.dump(rouge_metrics, f, indent=4, sort_keys=True)
         try:
             logger.info("*** Pushing best model to hub ***")
-            push_model_to_hub(os.path.join(training_args.output_dir, 'best_model'),
-                              training_args.hub_model_id)
+            # push_model_to_hub(os.path.join(training_args.output_dir, 'best_model'),
+            #                   training_args.hub_model_id)
         except Exception as e:
             logger.info(e)
             logger.info("Failed to push model to hub")

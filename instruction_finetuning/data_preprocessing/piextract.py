@@ -198,6 +198,35 @@ def to_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
     return dataset_dict
 
 
+def flan_text2text(path='alzoubi36/piextract', subtask: str = 'combined'):
+    """Converts the piextract dataset to a text2text dataset."""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    subtasks = SUBTASKS
+
+    if subtask != 'combined' and subtask not in subtasks:
+        raise ValueError(f"subtask must be one of {subtasks} or 'combined'")
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        if subtask == 'combined':
+            dataset = dataset.map(lambda example: {'text': f"""Label the following tokens with the following possible labels. Labels: ["COLLECT", "NOT_COLLECT", "NOT_SHARE", "SHARE"] Tokens: {''.join(add_extra_ids(combine_subtasks_labels(example), mode='tokens'))}""",
+                                                   'label': ''.join(add_extra_ids(example, mode='tags'))},
+                                  remove_columns=subtasks)
+            dataset_dict[split] = dataset
+        else:
+            dataset = dataset.map(lambda example: {'text': f"piextract {subtask} "
+                                                           f"sentence:{''.join(add_extra_ids(example, mode='tokens', subtask=subtask))}",
+                                                   'label': ''.join(
+                                                       add_extra_ids(example, mode='tags', subtask=subtask))},
+                                  remove_columns=subtasks)
+            dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
 def split_labels(label_list, required_subtask='COLLECT'):
     required_subtask = '-' + required_subtask
     for i, label in enumerate(label_list):

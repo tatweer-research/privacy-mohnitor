@@ -64,6 +64,20 @@ def to_text2text(path='alzoubi36/title_generation'):
     return dataset_dict
 
 
+def flan_text2text(path='alzoubi36/title_generation'):
+    """Convert title_generation dataset to text2text format"""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        dataset = dataset.map(lambda example: {'text': f"Give a title to the following text: {example['text']}",
+                                               'label': example['summary']},
+                              remove_columns=['summary'])
+        dataset_dict[split] = dataset
+    return dataset_dict
+
+
 if __name__ == "__main__":
     path = r"C:\Users\Mohammad.Al-zoubi\Documents\projects\privacy-mohnitor\instruction_finetuning\data" \
            r"\title_generation"

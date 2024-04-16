@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import List, Union
 
 from instruction_finetuning.models_evaluation import (
     list_models,
@@ -30,6 +31,9 @@ class GeneralConfig(BaseModel):
     requested_tasks: list
     requested_mtl_tasks: list
     examples_limit: int
+    privacy_glue_only: bool
+    flan: bool
+    models_to_use: Union[List[str], None]
 
 
 class AppConfig(BaseModel):
@@ -92,7 +96,8 @@ class T5EvaluationPipeline:
         model_names = list(filter(lambda x: x.split('-')[-1] in self.general_config.requested_sizes, model_names))
         model_names = list(
             filter(lambda x: get_base_model_name(x) in self.general_config.requested_base_models, model_names))
-        model_names = list(filter(lambda x: get_task_name(x, privacy_glue_only) in self.general_config.requested_tasks, model_names))
+        model_names = list(
+            filter(lambda x: get_task_name(x, privacy_glue_only) in self.general_config.requested_tasks, model_names))
         return model_names
 
     def evaluate_model(self, model_name, task):
@@ -106,12 +111,16 @@ class T5EvaluationPipeline:
 
         elif get_task_name(model_name) == 'multitask':
             model_save_name = model_name.replace('multitask', task)
+        
+        if self.general_config.models_to_use:
+            tokenizer_name = model_name
+        else:
+            tokenizer_name = self.get_tokenizer_name(model_name)
 
-        tokenizer_name = self.get_tokenizer_name(model_name)
-        max_generation_length = 5 if task == 'privacy_qa' else 512
+        max_generation_length = 15 if task == 'privacy_qa' else 512
         logger.info(f"Limiting generation length on model {model_name} to {max_generation_length} tokens...")
         try:
-            model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_save_name)
+            model_outputs_dir = Path(self.general_config.path_to_model_outputs).joinpath(model_save_name).joinpath(task)
             model_outputs_json = model_outputs_dir / 'outputs.json'
             if model_outputs_json.exists():
                 logger.info(f"Model {model_name} already evaluated. Skipping...")
@@ -121,11 +130,12 @@ class T5EvaluationPipeline:
             evaluation_result = generate_and_evaluate(model_name=model_name,
                                                       batch_size=self.get_batch_size(model_name),
                                                       examples_limit=self.general_config.examples_limit,
-                                                      tokenizer_name=self.get_tokenizer_name(model_name),
+                                                      tokenizer_name=tokenizer_name,
                                                       pglue_task=task,
                                                       split='test',
                                                       max_generation_length=max_generation_length,
-                                                      output_json=model_outputs_json)
+                                                      output_json=model_outputs_json,
+                                                      flan=self.general_config.flan)
 
             self.results[model_save_name] = evaluation_result
             with open(self.general_config.path_to_results_json, 'w', encoding="utf-8") as f:
@@ -139,15 +149,19 @@ class T5EvaluationPipeline:
             logger.info("Skipping model...")
 
     def run(self):
-        available_models = list_models(huggingface_search_params)
-        model_names = [model['modelId'] for model in available_models]
-        model_names = self.filter_models(model_names)
+        if not self.general_config.models_to_use:
+            available_models = list_models(huggingface_search_params)
+            model_names = [model['modelId'] for model in available_models]
+            model_names = self.filter_models(model_names,
+                                             self.general_config.privacy_glue_only)
+        else:
+            model_names = self.general_config.models_to_use
 
         logger.info(f"Found {len(model_names)} models...")
         for model_name in model_names:
 
-            task = get_task_name(model_name)
-            if task != 'multitask':
+            task = get_task_name(model_name, self.general_config.privacy_glue_only)
+            if task in TASKS_EVALUATION_FUNCTIONS.keys():
                 self.evaluate_model(model_name, task)
             else:
                 for _task in self.general_config.requested_mtl_tasks:

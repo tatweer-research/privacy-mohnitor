@@ -79,9 +79,38 @@ def to_text2text(path='alzoubi36/privacy_qa'):
     return dataset_dict
 
 
+def flan_text2text(path='alzoubi36/privacy_qa'):
+    """Convert privacy_qa dataset to text2text format"""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    # collect information about label
+    label_info = datasets.ClassLabel(names=LABELS)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(
+            lambda example: {'text': f"""Answer the following question: Is the following text relevant to the following question? Give the labels either "Relevant" or "Irrelevant" Question:  {example['question']}  Text: {example['text']}""",
+                             'label': example['label']}, remove_columns=['question'])
+
+        dataset = dataset.map(
+            lambda examples: {
+                "label": [label_info.int2str(label) for label in examples["label"]]
+            },
+            batched=True,
+        )
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
 def label_from_text(label):
     label_info = datasets.ClassLabel(names=LABELS)
-    return label_info.str2int(label)
+    try:
+        return label_info.str2int(label)
+    except:
+        return label_info.str2int("Irrelevant")
 
 
 if __name__ == "__main__":

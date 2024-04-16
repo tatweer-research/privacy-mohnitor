@@ -3,7 +3,12 @@ general:
     path_to_results_json: "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/results.json"
     path_to_model_outputs: "/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference"
     examples_limit: 1100
-    generate_only: False
+    privacy_glue_only: False
+    flan: True
+    models_to_use:
+        - google/flan-t5-small
+        - google/flan-t5-base
+        - google/flan-t5-large
     batch_sizes:
         small: 32
         base: 16
@@ -11,14 +16,25 @@ general:
         3b: 4
     requested_sizes:
         - small
-#        - base
-#        - large
+        - base
+        - large
     requested_base_models:
-#        - priva_t5
+        - priva_t5
         - t5
 #        - priva_t5-v1.1
 #        - t5-v1.1
     requested_tasks: # Used to initially filter models
+#        - policy_ie_a
+#        - opp_115
+#        - piextract
+#        - policy_detection
+#        - policy_ie_b
+#        - policy_qa
+#        - privacy_qa
+        - title_generation
+#        - multitask
+
+    requested_mtl_tasks:
         - policy_ie_a
         - opp_115
         - piextract
@@ -27,7 +43,3 @@ general:
         - policy_qa
         - privacy_qa
         - title_generation
-#        - multitask
-
-    requested_mtl_tasks:
-        - privacy_qa

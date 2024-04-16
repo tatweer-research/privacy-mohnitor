@@ -80,6 +80,23 @@ def to_text2text(path='alzoubi36/policy_qa'):
     return dataset_dict
 
 
+def flan_text2text(path='alzoubi36/policy_qa'):
+    """Converts the policy_qa dataset to text2text format"""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+
+        dataset = dataset.map(lambda example: {'text': f"Give an answer to this question from the text: Question: {example['question']} Text: {example['context']}",
+                                               'label': f"{example['answers']['text'][0]}"},
+                              remove_columns=['question', 'context', 'answers', 'id', 'title'])
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
 def label_from_text(label):
     raise NotImplementedError("No need to implement this function for policy_qa dataset")
 

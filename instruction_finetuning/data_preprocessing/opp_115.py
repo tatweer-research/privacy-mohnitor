@@ -95,6 +95,33 @@ def to_text2text(path='alzoubi36/opp_115'):
     return dataset_dict
 
 
+def flan_text2text(path='alzoubi36/opp_115'):
+    """Convert opp_115 dataset to text2text format"""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+    label_info = datasets.Sequence(datasets.ClassLabel(names=LABELS))
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(lambda example: {'text': f"""Answer the following question: which of the following labels is suitable to the following text? Multiple lables can be used. Labels: "Data Retention", "Data Security", "Do Not Track", "First Party Collection/Use", "International and Specific Audiences", "Introductory/Generic", "Policy Change", "Practice not covered", "Privacy contact information","Third Party Sharing/Collection", "User Access, Edit and Deletion" and "User Choice/Control", Text: {example['text']}""",
+                                               'label': example['label']})
+
+        dataset = dataset.map(
+            lambda examples: {
+                "label": [
+                    '\n'.join(label_info.feature.int2str(labels)) for labels in examples["label"]
+                ]
+            },
+            batched=True,
+        )
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
+
 import re
 
 

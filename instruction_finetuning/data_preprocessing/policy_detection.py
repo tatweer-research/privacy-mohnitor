@@ -69,6 +69,27 @@ def to_text2text(path='alzoubi36/policy_detection'):
     return dataset_dict
 
 
+def flan_text2text(path='alzoubi36/policy_detection'):
+    """Convert policy_detection dataset to text2text format"""
+
+    # Load the dataset
+    dataset_dict = load_dataset(path)
+
+    for split in dataset_dict.keys():
+        dataset = dataset_dict[split]
+        # Add prefix to each datapoint
+        dataset = dataset.map(lambda example: {'text': f"""Answer the following question: Is this text a privacy policy? Give the labels either "policy" or "not_policy" Text: {example['text']}""",
+                                               'label': example['label']})
+
+        # Transform labels
+        label_mapping = {1: 'policy', 0: 'not policy'}
+        dataset = dataset.map(lambda example: {'text': example['text'],
+                                               'label': label_mapping[example['label']]})
+        dataset_dict[split] = dataset
+
+    return dataset_dict
+
+
 def label_from_text(label):
     label_mapping = {'policy': 1, 'not policy': 0}
     return label_mapping[label]

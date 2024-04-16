@@ -10,11 +10,11 @@ from transformers import (
     FlaxT5ForConditionalGeneration,
 )
 
-from instruction_finetuning.data_preprocessing import text2text_functions
+from instruction_finetuning.data_preprocessing import text2text_functions, flan_text2text_functions
 from tqdm import tqdm
 
-FLAX = True
-PT = False
+FLAX = False
+PT = True
 
 
 # TODO: Remove this function
@@ -163,8 +163,12 @@ def generate_model_outputs_dataset(models,
                                    batch_size=16,
                                    max_generation_length=512,
                                    split='test',
-                                   examples_limit=None):
-    dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
+                                   examples_limit=None,
+                                   flan=False):
+    if not flan:
+        dataset_dict = text2text_functions["privacy_glue"][pglue_task]()
+    else:
+        dataset_dict = flan_text2text_functions["privacy_glue"][pglue_task]()
 
     DATASET = split
 
@@ -196,7 +200,8 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
                           model=None,
                           tokenizer=None,
                           split="test",
-                          examples_limit=None):
+                          examples_limit=None,
+                          flan=False):
     if not model and not tokenizer:
         tokenizer, models = initialize_model(model_name, tokenizer_name)
     else:
@@ -210,7 +215,8 @@ def generate_and_evaluate(model_name="alzoubi36/pglue_piextract_priva_t5-base",
                                    pglue_task=pglue_task,
                                    outputs_path=output_json,
                                    split=split,
-                                   examples_limit=examples_limit)
+                                   examples_limit=examples_limit,
+                                   flan=flan)
     end = time.time()
     print("Generation time: ", end - start)
     from instruction_finetuning.models_evaluation.calculate_f1 import TASKS_EVALUATION_FUNCTIONS
@@ -225,7 +231,7 @@ if __name__ == '__main__':
 
     generate_and_evaluate(model_name=model_name,
                           tokenizer_name=model_name,
-                          pglue_task="opp_115",
+                          pglue_task="policy_detection",
                           split="test",
                           output_json="outputs.json",
                           examples_limit=None,

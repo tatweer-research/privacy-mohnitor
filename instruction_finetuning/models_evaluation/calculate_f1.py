@@ -21,6 +21,8 @@ from instruction_finetuning.data_preprocessing.policy_ie_b import label_from_tex
 from instruction_finetuning.data_preprocessing.policy_ie_b import SUBTASKS as policy_ie_b_subtasks
 from instruction_finetuning.data_preprocessing.policy_ie_b import LABELS as policy_ie_b_labels
 
+model_type = 'flax'
+
 
 def evaluate_policy_detection(model_outputs_path, split='test', examples_limit=None):
     # Dataset
@@ -33,7 +35,7 @@ def evaluate_policy_detection(model_outputs_path, split='test', examples_limit=N
         results = json.load(f)
 
     y_true = [example['label'] for example in dataset][:examples_limit]
-    y_pred = [1 if example == 'policy' else 0 for example in results['flax']]
+    y_pred = [1 if example == 'policy' else 0 for example in results[model_type]]
     # target_names = ['not_policy', 'policy']
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
@@ -52,7 +54,7 @@ def evaluate_policy_ie_a(model_outputs_path, split='test', examples_limit=None):
         results = json.load(f)
 
     y_true = [example['label'] for example in dataset][:examples_limit]
-    y_pred = [policy_ie_a_from_text(example) for example in results['flax']]
+    y_pred = [policy_ie_a_from_text(example) for example in results[model_type]]
     target_names = policy_ie_a_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4, labels=[0, 1, 2, 3, 4])
@@ -71,7 +73,7 @@ def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
         results = json.load(f)
 
     y_true = [example['label'] for example in dataset][:examples_limit]
-    y_pred = [opp_115_from_text(example) for example in results['flax']]
+    y_pred = [opp_115_from_text(example) for example in results[model_type]]
 
     # TODO: find a better way to handle empty predictions or labels with zero predictions
     for i in range(len(y_pred)):
@@ -82,7 +84,7 @@ def evaluate_opp_115(model_outputs_path, split='test', examples_limit=None):
     if len(np.unique(flat_y_pred)) == 1:
         a = [0 for i in range(len(opp_115_labels))]
         a[np.unique(flat_y_pred)[0]] = 1
-        y_pred = np.asarray([a for i in results['flax']])
+        y_pred = np.asarray([a for i in results[model_type]])
     y_true = MultiLabelBinarizer(classes=np.arange(len(opp_115_labels))).fit_transform(y_true)
     y_pred = MultiLabelBinarizer(classes=np.arange(len(opp_115_labels))).fit_transform(y_pred)
 
@@ -104,7 +106,7 @@ def evaluate_privacy_qa(model_outputs_path, split='test', examples_limit=None):
         results = json.load(f)
 
     y_true = [example['label'] for example in dataset][:examples_limit]
-    y_pred = [privacy_qa_from_text(example) for example in results['flax']]
+    y_pred = [privacy_qa_from_text(example) for example in results[model_type]]
     target_names = privacy_qa_labels
     # result_dict = classification_report(y_true, y_pred, target_names=target_names, output_dict=True)
     # result = classification_report(y_true, y_pred, target_names=target_names, digits=4)
@@ -137,7 +139,7 @@ def evaluate_piextract(model_outputs_path, split='test', examples_limit=None):
     f1_scores = []
     for subtask in piextract_subtasks:
         y_true = [example[subtask]['tags'] for example in dataset][:examples_limit]
-        y_pred = [piextract_from_text(example, required_subtask=subtask) for example in results['flax']]
+        y_pred = [piextract_from_text(example, required_subtask=subtask) for example in results[model_type]]
         y_true, y_pred = postprocess(y_true, y_pred)
         _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='macro')
         f1_scores.append(f1_score_result)
@@ -172,7 +174,7 @@ def evaluate_policy_ie_b(model_outputs_path, split='test', examples_limit=None):
     f1_scores = []
     for i, subtask in enumerate(policy_ie_b_subtasks):
         y_true = [example[subtask]['tags'] for example in dataset][:examples_limit]
-        y_pred = [policy_ie_b_from_text(example, required_subtask=subtask) for example in results['flax']]
+        y_pred = [policy_ie_b_from_text(example, required_subtask=subtask) for example in results[model_type]]
         y_true, y_pred = postprocess(y_true, y_pred)
         _, _, f1_score_result, _ = precision_recall_fscore_support(y_true, y_pred, average='macro')
         f1_scores.append(f1_score_result)
@@ -229,19 +231,19 @@ def evaluate_policy_qa(model_outputs_path, split='test', examples_limit=None):
         results = json.load(f)
 
     y_true = np.asarray([example['answers']['text'][0] for example in dataset][:examples_limit])
-    y_pred = np.asarray([example for example in results['flax']])
+    y_pred = np.asarray([example for example in results[model_type]])
 
     # Exact match score
     return np.sum(y_true == y_pred) / len(y_true)
 
 
 TASKS_EVALUATION_FUNCTIONS = {"policy_ie_a": evaluate_policy_ie_a,
-                             "opp_115": evaluate_opp_115,
-                             "piextract": evaluate_piextract,
-                             "policy_detection": evaluate_policy_detection,
-                             "policy_ie_b": evaluate_policy_ie_b,
-                             "policy_qa": evaluate_policy_qa,
-                             "privacy_qa": evaluate_privacy_qa}
+                              "opp_115": evaluate_opp_115,
+                              "piextract": evaluate_piextract,
+                              "policy_detection": evaluate_policy_detection,
+                              "policy_ie_b": evaluate_policy_ie_b,
+                              "policy_qa": evaluate_policy_qa,
+                              "privacy_qa": evaluate_privacy_qa}
 
 if __name__ == '__main__':
     path = r'/home/Mohammad.Al-Zoubi/privacy-mohnitor/instruction_finetuning/experiments/inference/alzoubi36' \
